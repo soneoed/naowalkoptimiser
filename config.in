@@ -1,0 +1,27 @@
+/* -*- C++ -*- Tell editors this is a C++ file (despite it's .in extension) */
+/* This is an auto generated file. Please do not edit it.*/
+
+/**
+ * @author Jason Kulk
+ *
+ * Version : $Id$
+ */
+
+#include "configcore.h"
+#ifndef CONFIG_H
+#define CONFIG_H
+
+// .:: System Headers ::
+
+// ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: Typedefs :::..
+
+// ::::::::::::::::::::::::::::::::::::::::::::::::::::: Platform variables :::..
+
+# define WALKOPTIMISER_IS_REMOTE_${WALKOPTIMISER_IS_REMOTE}
+
+# define WALKOPTIMISER_REVISION "${WALKOPTIMISER_REVISION}"
+
+// :::::::::::::::::::::::::::::::::::::::::::::::::::::: Options variables :::..
+
+#endif // !CONFIG_H
+

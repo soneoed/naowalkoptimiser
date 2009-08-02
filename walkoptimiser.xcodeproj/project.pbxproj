@@ -1,0 +1,278 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 45;
+	objects = {
+
+/* Begin PBXFileReference section */
+		96B0CABD10255BD6001CA433 /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
+		96B0CABE10255BD7001CA433 /* config.in */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = config.in; sourceTree = "<group>"; };
+		96B0CABF10255BD7001CA433 /* crosscompile.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = crosscompile.sh; sourceTree = "<group>"; };
+		96B0CAC110255BD7001CA433 /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
+		96B0CAC210255BD7001CA433 /* config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = config.h; sourceTree = "<group>"; };
+		96B0CAC310255BD7001CA433 /* Globals.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Globals.cpp; sourceTree = "<group>"; };
+		96B0CAC410255BD7001CA433 /* Globals.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Globals.h; sourceTree = "<group>"; };
+		96B0CAC510255BD7001CA433 /* jwalkoptimiser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = jwalkoptimiser.cpp; sourceTree = "<group>"; };
+		96B0CAC610255BD7001CA433 /* jwalkoptimiser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = jwalkoptimiser.h; sourceTree = "<group>"; };
+		96B0CAC810255BD7001CA433 /* Locomotion.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Locomotion.cpp; sourceTree = "<group>"; };
+		96B0CAC910255BD7001CA433 /* Locomotion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Locomotion.h; sourceTree = "<group>"; };
+		96B0CACA10255BD7001CA433 /* script.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = script.cpp; sourceTree = "<group>"; };
+		96B0CACB10255BD7001CA433 /* script.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = script.h; sourceTree = "<group>"; };
+		96B0CACD10255BD7001CA433 /* actuators.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = actuators.cpp; sourceTree = "<group>"; };
+		96B0CACE10255BD7001CA433 /* actuators.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = actuators.h; sourceTree = "<group>"; };
+		96B0CACF10255BD7001CA433 /* alproxies.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = alproxies.h; sourceTree = "<group>"; };
+		96B0CAD010255BD7001CA433 /* alwalk.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = alwalk.cpp; sourceTree = "<group>"; };
+		96B0CAD110255BD7001CA433 /* alwalk.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = alwalk.h; sourceTree = "<group>"; };
+		96B0CAD210255BD7001CA433 /* jwalk.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = jwalk.cpp; sourceTree = "<group>"; };
+		96B0CAD310255BD7001CA433 /* jwalk.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = jwalk.h; sourceTree = "<group>"; };
+		96B0CAD410255BD7001CA433 /* jwalkincludes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = jwalkincludes.h; sourceTree = "<group>"; };
+		96B0CAD510255BD7001CA433 /* jwalkthread.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = jwalkthread.cpp; sourceTree = "<group>"; };
+		96B0CAD610255BD7001CA433 /* jwalkthread.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = jwalkthread.h; sourceTree = "<group>"; };
+		96B0CAD710255BD7001CA433 /* nuwalk.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = nuwalk.cpp; sourceTree = "<group>"; };
+		96B0CAD810255BD7001CA433 /* nuwalk.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = nuwalk.h; sourceTree = "<group>"; };
+		96B0CAD910255BD7001CA433 /* sensors.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = sensors.cpp; sourceTree = "<group>"; };
+		96B0CADA10255BD7001CA433 /* sensors.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sensors.h; sourceTree = "<group>"; };
+		96B0CADB10255BD7001CA433 /* step.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = step.cpp; sourceTree = "<group>"; };
+		96B0CADC10255BD7001CA433 /* step.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = step.h; sourceTree = "<group>"; };
+		96B0CADD10255BD7001CA433 /* walkprimitive.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = walkprimitive.cpp; sourceTree = "<group>"; };
+		96B0CADE10255BD7001CA433 /* walkprimitive.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = walkprimitive.h; sourceTree = "<group>"; };
+		96B0CAE010255BD7001CA433 /* GameController.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GameController.cpp; sourceTree = "<group>"; };
+		96B0CAE110255BD7001CA433 /* GameController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GameController.h; sourceTree = "<group>"; };
+		96B0CAE210255BD7001CA433 /* GamePacketDefs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GamePacketDefs.h; sourceTree = "<group>"; };
+		96B0CAE310255BD7001CA433 /* Network.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Network.cpp; sourceTree = "<group>"; };
+		96B0CAE410255BD7001CA433 /* Network.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Network.h; sourceTree = "<group>"; };
+		96B0CAE510255BD7001CA433 /* RoboCupGameControlData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RoboCupGameControlData.h; sourceTree = "<group>"; };
+		96B0CAE610255BD7001CA433 /* thread.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = thread.cpp; sourceTree = "<group>"; };
+		96B0CAE710255BD7001CA433 /* thread.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = thread.h; sourceTree = "<group>"; };
+		96B0CAE810255BD7001CA433 /* UdpPort.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = UdpPort.cpp; sourceTree = "<group>"; };
+		96B0CAE910255BD7001CA433 /* UdpPort.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UdpPort.h; sourceTree = "<group>"; };
+		96B0CAEA10255BD7001CA433 /* walkoptimiser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = walkoptimiser.cpp; sourceTree = "<group>"; };
+		96B0CAEB10255BD7001CA433 /* walkoptimiser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = walkoptimiser.h; sourceTree = "<group>"; };
+		96B0CAEC10255BD7001CA433 /* test_jwalk.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = test_jwalk.py; sourceTree = "<group>"; };
+		96B0CAED10255BD7001CA433 /* walkoptimiser.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = walkoptimiser.xcodeproj; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		08FB7794FE84155DC02AAC07 /* walkoptimiser */ = {
+			isa = PBXGroup;
+			children = (
+				96B0CABB10255BD6001CA433 /* walkoptimiser */,
+			);
+			name = walkoptimiser;
+			sourceTree = "<group>";
+		};
+		96B0CABB10255BD6001CA433 /* walkoptimiser */ = {
+			isa = PBXGroup;
+			children = (
+				96B0CABC10255BD6001CA433 /* bin */,
+				96B0CABD10255BD6001CA433 /* CMakeLists.txt */,
+				96B0CABE10255BD7001CA433 /* config.in */,
+				96B0CABF10255BD7001CA433 /* crosscompile.sh */,
+				96B0CAC010255BD7001CA433 /* src */,
+				96B0CAEC10255BD7001CA433 /* test_jwalk.py */,
+				96B0CAED10255BD7001CA433 /* walkoptimiser.xcodeproj */,
+			);
+			name = walkoptimiser;
+			sourceTree = "<group>";
+		};
+		96B0CABC10255BD6001CA433 /* bin */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = bin;
+			sourceTree = "<group>";
+		};
+		96B0CAC010255BD7001CA433 /* src */ = {
+			isa = PBXGroup;
+			children = (
+				96B0CAC110255BD7001CA433 /* CMakeLists.txt */,
+				96B0CAC210255BD7001CA433 /* config.h */,
+				96B0CAC310255BD7001CA433 /* Globals.cpp */,
+				96B0CAC410255BD7001CA433 /* Globals.h */,
+				96B0CAC510255BD7001CA433 /* jwalkoptimiser.cpp */,
+				96B0CAC610255BD7001CA433 /* jwalkoptimiser.h */,
+				96B0CAC710255BD7001CA433 /* Locomotion */,
+				96B0CADF10255BD7001CA433 /* Network */,
+				96B0CAEA10255BD7001CA433 /* walkoptimiser.cpp */,
+				96B0CAEB10255BD7001CA433 /* walkoptimiser.h */,
+			);
+			path = src;
+			sourceTree = "<group>";
+		};
+		96B0CAC710255BD7001CA433 /* Locomotion */ = {
+			isa = PBXGroup;
+			children = (
+				96B0CAC810255BD7001CA433 /* Locomotion.cpp */,
+				96B0CAC910255BD7001CA433 /* Locomotion.h */,
+				96B0CACA10255BD7001CA433 /* script.cpp */,
+				96B0CACB10255BD7001CA433 /* script.h */,
+				96B0CACC10255BD7001CA433 /* Walk */,
+			);
+			path = Locomotion;
+			sourceTree = "<group>";
+		};
+		96B0CACC10255BD7001CA433 /* Walk */ = {
+			isa = PBXGroup;
+			children = (
+				96B0CACD10255BD7001CA433 /* actuators.cpp */,
+				96B0CACE10255BD7001CA433 /* actuators.h */,
+				96B0CACF10255BD7001CA433 /* alproxies.h */,
+				96B0CAD010255BD7001CA433 /* alwalk.cpp */,
+				96B0CAD110255BD7001CA433 /* alwalk.h */,
+				96B0CAD210255BD7001CA433 /* jwalk.cpp */,
+				96B0CAD310255BD7001CA433 /* jwalk.h */,
+				96B0CAD410255BD7001CA433 /* jwalkincludes.h */,
+				96B0CAD510255BD7001CA433 /* jwalkthread.cpp */,
+				96B0CAD610255BD7001CA433 /* jwalkthread.h */,
+				96B0CAD710255BD7001CA433 /* nuwalk.cpp */,
+				96B0CAD810255BD7001CA433 /* nuwalk.h */,
+				96B0CAD910255BD7001CA433 /* sensors.cpp */,
+				96B0CADA10255BD7001CA433 /* sensors.h */,
+				96B0CADB10255BD7001CA433 /* step.cpp */,
+				96B0CADC10255BD7001CA433 /* step.h */,
+				96B0CADD10255BD7001CA433 /* walkprimitive.cpp */,
+				96B0CADE10255BD7001CA433 /* walkprimitive.h */,
+			);
+			path = Walk;
+			sourceTree = "<group>";
+		};
+		96B0CADF10255BD7001CA433 /* Network */ = {
+			isa = PBXGroup;
+			children = (
+				96B0CAE010255BD7001CA433 /* GameController.cpp */,
+				96B0CAE110255BD7001CA433 /* GameController.h */,
+				96B0CAE210255BD7001CA433 /* GamePacketDefs.h */,
+				96B0CAE310255BD7001CA433 /* Network.cpp */,
+				96B0CAE410255BD7001CA433 /* Network.h */,
+				96B0CAE510255BD7001CA433 /* RoboCupGameControlData.h */,
+				96B0CAE610255BD7001CA433 /* thread.cpp */,
+				96B0CAE710255BD7001CA433 /* thread.h */,
+				96B0CAE810255BD7001CA433 /* UdpPort.cpp */,
+				96B0CAE910255BD7001CA433 /* UdpPort.h */,
+			);
+			path = Network;
+			sourceTree = "<group>";
+		};
+		96B0CAEE10255BD7001CA433 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXLegacyTarget section */
+		D28A88AD04BDD90700651E21 /* walkoptimiser */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION)";
+			buildConfigurationList = 1DEB918F08733D9F0010E9CD /* Build configuration list for PBXLegacyTarget "walkoptimiser" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			dependencies = (
+			);
+			name = walkoptimiser;
+			passBuildSettingsInEnvironment = 1;
+			productName = walkoptimiser;
+		};
+/* End PBXLegacyTarget section */
+
+/* Begin PBXProject section */
+		08FB7793FE84155DC02AAC07 /* Project object */ = {
+			isa = PBXProject;
+			buildConfigurationList = 1DEB919308733D9F0010E9CD /* Build configuration list for PBXProject "walkoptimiser" */;
+			compatibilityVersion = "Xcode 3.1";
+			hasScannedForEncodings = 1;
+			mainGroup = 08FB7794FE84155DC02AAC07 /* walkoptimiser */;
+			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = 96B0CAEE10255BD7001CA433 /* Products */;
+					ProjectRef = 96B0CAED10255BD7001CA433 /* walkoptimiser.xcodeproj */;
+				},
+			);
+			projectRoot = "";
+			targets = (
+				D28A88AD04BDD90700651E21 /* walkoptimiser */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin XCBuildConfiguration section */
+		1DEB919008733D9F0010E9CD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				DEBUGGING_SYMBOLS = YES;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				PRODUCT_NAME = walkoptimiser;
+			};
+			name = Debug;
+		};
+		1DEB919108733D9F0010E9CD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = YES;
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				PRODUCT_NAME = walkoptimiser;
+			};
+			name = Release;
+		};
+		1DEB919408733D9F0010E9CD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PREBINDING = NO;
+				SDKROOT = macosx10.5;
+			};
+			name = Debug;
+		};
+		1DEB919508733D9F0010E9CD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				PREBINDING = NO;
+				SDKROOT = macosx10.5;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1DEB918F08733D9F0010E9CD /* Build configuration list for PBXLegacyTarget "walkoptimiser" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1DEB919008733D9F0010E9CD /* Debug */,
+				1DEB919108733D9F0010E9CD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		1DEB919308733D9F0010E9CD /* Build configuration list for PBXProject "walkoptimiser" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1DEB919408733D9F0010E9CD /* Debug */,
+				1DEB919508733D9F0010E9CD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 08FB7793FE84155DC02AAC07 /* Project object */;
+}
