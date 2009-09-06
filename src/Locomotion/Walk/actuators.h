@@ -56,6 +56,8 @@ class Actuators
     
         // Whole body position and hardness values for the next dcm cycle
         void clearDCM();    
+        void resetMotorBoards();
+        void resetChestBoard();
         void sendFrameToBody(float positions[], float hardnesses[]);
         void sendFrameToNotHead(float positions[], float hardnesses[]);
     

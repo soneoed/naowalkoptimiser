@@ -407,6 +407,33 @@ void Actuators::clearDCM()
     return;
 }
 
+/*! Resets the motor boards. Use this to reset all of the motors and hopefully return stiffness
+ */
+void Actuators::resetMotorBoards()
+{
+#if ACTUATORS_VERBOSITY > 0
+    thelog << "ACTUATORS: resetMotorBoards. Reseting the motor boards. Wait 15 seconds." << endl;
+#endif
+    alDcm->callVoid("special", string("ResetMB"));
+    //usleep(15*1e6);
+#if ACTUATORS_VERBOSITY > 0
+    thelog << "ACTUATORS: resetMotorBoards. Reset complete." << endl;
+#endif
+}
+
+/*! Resets the chest board. Use this if you suspect the chest board is playing up
+ */
+void Actuators::resetChestBoard()
+{
+#if ACTUATORS_VERBOSITY > 0
+    thelog << "ACTUATORS: resetChestBoard. Reseting the chest board. Wait 15 seconds." << endl;
+#endif
+    alDcm->callVoid("special", string("Reset"));
+    //usleep(15*1e6);
+#if ACTUATORS_VERBOSITY > 0
+    thelog << "ACTUATORS: resetChestBoard. Reset complete." << endl;
+#endif
+}
 
 /*! Send an entire motion frame to the whole body
  
