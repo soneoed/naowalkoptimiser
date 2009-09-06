@@ -1,7 +1,5 @@
-#include <iostream>
-#include <fstream>
 #include "script.h"
-#include "../Nao.h"
+#include "Walk/jwalk.h"
 
 using namespace std;
 
@@ -20,17 +18,18 @@ static inline bool cropJunk(std::string &input)
 
 script::script()
 {
-  m_fileName = "";
-  m_scriptLength = 0;
-  m_hasScript = false;
-  m_jointNames.clear();
-  m_jointPositions.clear();
-  m_timePoints.clear();
+    m_fileName = "";
+    m_scriptLength = 0;
+    m_hasScript = false;
+    m_jointNames.clear();
+    m_jointPositions.clear();
+    m_timePoints.clear();
 }
 
-script::script(std::string file)
+script::script(std::string file, JWalk* pjwalk)
 {
   script();
+  jwalk = pjwalk;
   loadFile(file);
 }
 
@@ -207,13 +206,13 @@ int script::play(bool block)
     if (jointID < 2)        // if the joint ID is of the head, then it is OK to use the value in the script
         timeCommand[0] = m_jointPositions[jointID][getNumSteps() - 1];
     else                    // for the rest of the body we need to go to the walk pose
-        timeCommand[0] = NAO->m_locomotion->m_Walk->JWalkCommonPositions[jointID - 2];      // this assumes that the joints are in the same order
+        timeCommand[0] = jwalk->JWalkCommonPositions[jointID - 2];      // this assumes that the joints are in the same order
     timeCommand[1] = currTime + (int)m_timePoints[getNumSteps() - 1];  
     commands.arrayPush(timeCommand);
     
     
     instruction[2] = commands;
-    NAO->DCM_Proxy->set(instruction);
+    alDcm->callVoid("set", instruction);
     thelog << "script: " << m_fileName << " play() " << instruction.toString(AL::VerbosityMini) << endl;
     
   }
@@ -247,7 +246,7 @@ bool script::setStiffness(float newStiffness)
     timeCommand[1] = currTime;
     commands.arrayPush(timeCommand);
     instruction[2] = commands;
-    NAO->DCM_Proxy->set(instruction);
+    alDcm->callVoid("set", instruction);
       
     //thelog << "script: play() " << instruction.toString(AL::VerbosityMini) << endl;
       
