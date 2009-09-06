@@ -14,7 +14,7 @@
 #include "almemoryproxy.h"
 #include "almemoryfastaccess.h"
 #include "dcmproxy.h"
-extern AL::ALPtr<AL::ALMotionProxy> alMotion;
+//extern AL::ALPtr<AL::ALMotionProxy> alMotion;
 extern AL::ALPtr<AL::ALMemoryProxy> alStm;
 extern ALMemoryFastAccess* alFastMem;              // The super secret almemoryfastaccess. Use this for very fast access to variables on a regular basis (ie sensor feedback)
 extern AL::ALPtr<AL::ALProxy> alDcm;
