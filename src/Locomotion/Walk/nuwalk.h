@@ -37,7 +37,7 @@ enum GWalkDirectionEnum
     GWALK_NUM_DIRECTIONS
 };
 
-#define NUWALK_VERBOSITY       3
+#define NUWALK_VERBOSITY       2
 
 class NUWalk
 {
