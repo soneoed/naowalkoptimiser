@@ -1,6 +1,7 @@
 #include "UdpPort.h"
 #include <sstream>
 #include <iostream>
+#include "../Locomotion/Walk/jwalkincludes.h"
 
 #define TEAM_BROADCAST_ADDRESS "192.168.255.255"
 #define TEAM_PLAYER1_ADDRESS "192.168.16.11"
@@ -123,13 +124,13 @@ void UdpPort::sendData(NetworkData netData)
     }
     else
     {
-        sendto(sockfd,netData.data,netData.size,0,(struct sockaddr *)&their_addr,sizeof(their_addr));
+        sendto(sockfd, netData.data, netData.size, 0, (struct sockaddr *)&their_addr, sizeof(their_addr));
     }
     
 
     sem_post (&mutex);
 
-    //printf("sent %d bytes to %s\n", netData.size, inet_ntoa(their_addr.sin_addr));
+    //thelog << "sent " << netData.size << "bytes to " << inet_ntoa(their_addr.sin_addr) << endl;
 
     return;
 
