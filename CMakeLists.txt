@@ -67,7 +67,7 @@ ENDIF("x${AL_DIR}x" STREQUAL "xx" )
 ############################ LIBRARY OR EXECUTABLE?
 # Create an option to compile module as a libray
 # or as a remote executable
-OPTION(  JASON_IS_REMOTE
+OPTION(  WALKOPTIMISER_IS_REMOTE
     " jason module is compiled as a remote module (ON or OFF)"
     OFF
   )
