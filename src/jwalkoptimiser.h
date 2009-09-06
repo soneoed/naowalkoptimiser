@@ -6,10 +6,12 @@
 #ifndef JWALKOPTIMISER_H
 #define JWALKOPTIMISER_H
 
-#include "Locmotion/Walk/jwalkincludes.h"
+#include "Locomotion/Walk/jwalkincludes.h"
 
 #define JWALKOPTIMISER_VERBOSITY            3
 #define JWALKOPTIMISER_FREQUENCY            10
+
+extern float networkControl1, networkControl2, networkControl3;
 
 extern pthread_t jWalkOptimiserThread;
 
