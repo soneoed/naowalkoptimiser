@@ -39,6 +39,7 @@ ALWalk::~ALWalk()
 
 void ALWalk::setStiffnessNotHead(float values[])
 {
+#if JWALK_ALMOTION
     static vector<float> larm (6, 0.0);
     static vector<float> rarm (6, 0.0);
     static vector<float> lleg (6, 0.0);
@@ -73,10 +74,12 @@ void ALWalk::setStiffnessNotHead(float values[])
     
     alMotion->post.gotoChainStiffnesses(string("LLeg"), lleg, 0.1, 0);
     alMotion->post.gotoChainStiffnesses(string("RLeg"), rleg, 0.1, 0);
+#endif
 }
 
 int ALWalk::goToAnglesNotHead(float positions[], int time)
 {
+#if JWALK_ALMOTION
     static vector<float> larm (6, 0.0);
     static vector<float> rarm (6, 0.0);
     static vector<float> lleg (6, 0.0);
@@ -112,6 +115,9 @@ int ALWalk::goToAnglesNotHead(float positions[], int time)
     alMotion->post.gotoChainAngles(string("LLeg"), lleg, seconds, 1);
     alMotion->post.gotoChainAngles(string("RLeg"), rleg, seconds, 1);
     return dcmTime + time;
+#else
+    return dcmTime;
+#endif
 }
 
 /*! Go to the new positions at the specified velocity (the almotion does the interpolation)
@@ -122,6 +128,7 @@ int ALWalk::goToAnglesNotHead(float positions[], int time)
  */
 int ALWalk::goToAnglesWithVelocityNotHead(float positions[], float velocity)
 {
+#if JWALK_ALMOTION
     // calculate the finishing times for the given velocity
     float times[ALIAS_TARGETS_NOT_HEAD_LENGTH];                 // the time in seconds
     float maxtime = 0;
@@ -139,6 +146,9 @@ int ALWalk::goToAnglesWithVelocityNotHead(float positions[], float velocity)
     for (unsigned char i=0; i<ALIAS_TARGETS_NOT_HEAD_LENGTH; i++)
         alMotion->post.gotoAngle(indexToName[i+2], positions[i], times[i], 1);
     return dcmTime + (int) (1000*maxtime);
+#else
+    return dcmTime;
+#endif
 }
 
 /********************************************************************************************************************************************************************
@@ -162,6 +172,7 @@ int ALWalk::goToAnglesWithVelocityNotHead(float positions[], float velocity)
  */
 void ALWalk::walkStraight(float distance)
 {
+#if JWALK_ALMOTION
     if (walkIsActive())
     {
         return;
@@ -181,6 +192,7 @@ void ALWalk::walkStraight(float distance)
         configALMotion(ALWALK_PRIMITIVE_BACKWARD);
         alMotion->post.walkStraight(distance, alWalkConfigs[ALWALK_PRIMITIVE_BACKWARD].CyclesPerStep);
     }
+#endif
 }
 
 /*! Walk along a arc of radius (cm) for an angle (radians)
@@ -191,6 +203,7 @@ Note. Nothing happens if the robot is already walking
  */
 void ALWalk::walkArc(float angle, float radius)
 {
+#if JWALK_ALMOTION
     if (walkIsActive())
         return;
     
@@ -201,6 +214,7 @@ void ALWalk::walkArc(float angle, float radius)
     radius = radius/100.0;              // convert the radius to metres as required by almotion
     configALMotion(ALWALK_PRIMITIVE_ARC);
     alMotion->post.walkArc(angle, radius, alWalkConfigs[ALWALK_PRIMITIVE_ARC].CyclesPerStep);
+#endif
 }
 
 /*! Walk sideways 'distance' in centimetres
@@ -210,6 +224,7 @@ Note. Nothing happens if the robot is already walking
  */
 void ALWalk::walkSideways(float distance)
 {
+#if JWALK_ALMOTION
     if (walkIsActive())
         return;
     
@@ -220,6 +235,7 @@ void ALWalk::walkSideways(float distance)
     distance = distance/100.0;          // convert to metres as required by almotion
     configALMotion(ALWALK_PRIMITIVE_SIDEWAYS);
     alMotion->post.walkSideways(distance, alWalkConfigs[ALWALK_PRIMITIVE_SIDEWAYS].CyclesPerStep);
+#endif
 }
 
 /*! Turn 'angle' radians on the spot
@@ -229,6 +245,7 @@ Note. Nothing happens if the robot is already walking
  */
 void ALWalk::turn(float angle)
 {
+#if JWALK_ALMOTION
     if (walkIsActive())
         return;
     
@@ -238,12 +255,14 @@ void ALWalk::turn(float angle)
     
     configALMotion(ALWALK_PRIMITIVE_TURN);
     alMotion->post.turn(angle, alWalkConfigs[ALWALK_PRIMITIVE_TURN].CyclesPerStep);
+#endif
 }
 
 /*! Returns true if there is an active alWalk task. Returns false otherwise
  */
 bool ALWalk::walkIsActive()
 {
+#if JWALK_ALMOTION
     if (balanceFalling == true || balanceFallen == true)        // the walk can not be active if I have fallen over
         return false;
     else if (walkAmIWalking == true)                            // if sensors thinks I am walking then I am definitely walking
@@ -252,6 +271,9 @@ bool ALWalk::walkIsActive()
         return true;
     else
         return false;
+#else
+    return false;
+#endif
 }
 
 /*! Blocks until along of the pending walk tasks have been completed.
@@ -259,11 +281,13 @@ bool ALWalk::walkIsActive()
  */
 void ALWalk::waitUntilFinished()
 {
+#if JWALK_ALMOTION
     while (walkIsActive())
     {
         sleep(0.05);
     }
     //alMotion->waitUntilWalkIsFinished();  //<---- This function fails, typical!
+#endif
 }
 
 /*! Safely stops the current walk as soon as possible (it will finish its current step, and then take a stopping step to bring the robot to rest)
@@ -272,8 +296,10 @@ void ALWalk::waitUntilFinished()
  */
 void ALWalk::stop()
 {
+#if JWALK_ALMOTION
     alMotion->clearFootsteps();
     alWalkGoDirection = ALWALK_DIRECTION_UNDEFINED;
+#endif
 }
 
 /********************************************************************************************************************************************************************
@@ -291,6 +317,7 @@ void ALWalk::stop()
  */
 void ALWalk::goForward()
 {
+#if JWALK_ALMOTION
     if (walkIsActive())
     {
         if (alWalkGoDirection == ALWALK_DIRECTION_FORWARD)          // if we are already walking forward don't reissue the command
@@ -301,12 +328,14 @@ void ALWalk::goForward()
     alWalkGoDirection = ALWALK_DIRECTION_FORWARD;
     configALMotion(ALWALK_PRIMITIVE_FORWARD);
     alMotion->post.walkStraight(6, alWalkConfigs[ALWALK_PRIMITIVE_FORWARD].CyclesPerStep);
+#endif
 }
 
 /*! Walk backward until another direction is called, or the walk is stopped (whether explicitly or implicitly)
  */
 void ALWalk::goBackward()
 {
+#if JWALK_ALMOTION
     if (walkIsActive())
     {
         if (alWalkGoDirection == ALWALK_DIRECTION_BACKWARD)          // if we are already walking forward don't reissue the command
@@ -317,12 +346,14 @@ void ALWalk::goBackward()
     alWalkGoDirection = ALWALK_DIRECTION_BACKWARD;
     configALMotion(ALWALK_PRIMITIVE_BACKWARD);
     alMotion->post.walkStraight(-6, alWalkConfigs[ALWALK_PRIMITIVE_BACKWARD].CyclesPerStep);
+#endif
 }
 
 /*! Walk along an arc in the specified direction until the another direction is called, or the walk is stopped (whether explicitly or implicitly)
  */
 void ALWalk::goArc(float angle)
 {
+#if JWALK_ALMOTION
     float radius = 0;
     
     if (walkIsActive())
@@ -343,12 +374,14 @@ void ALWalk::goArc(float angle)
         configALMotion(ALWALK_PRIMITIVE_ARC);
         alMotion->post.walkArc(angle, radius, alWalkConfigs[ALWALK_PRIMITIVE_ARC].CyclesPerStep);
     }
+#endif
 }
 
 /*! Walk left (sideways) until the another direction is called, or the walk is stopped (whether explicitly or implicitly)
  */
 void ALWalk::goLeft()
 {
+#if JWALK_ALMOTION
     if (walkIsActive())
     {
         if (alWalkGoDirection == ALWALK_DIRECTION_LEFT)          // if we are already walking left don't reissue the command
@@ -359,12 +392,14 @@ void ALWalk::goLeft()
     alWalkGoDirection = ALWALK_DIRECTION_LEFT;
     configALMotion(ALWALK_PRIMITIVE_SIDEWAYS);
     alMotion->post.walkSideways(6, alWalkConfigs[ALWALK_PRIMITIVE_SIDEWAYS].CyclesPerStep);
+#endif
 }
 
 /*! Walk right (sideways) until the another direction is called, or the walk is stopped (whether explicitly or implicitly)
  */
 void ALWalk::goRight()
 {
+#if JWALK_ALMOTION
     if (walkIsActive())
     {
         if (alWalkGoDirection == ALWALK_DIRECTION_RIGHT)          // if we are already walking forward don't reissue the command
@@ -375,6 +410,7 @@ void ALWalk::goRight()
     alWalkGoDirection = ALWALK_DIRECTION_RIGHT;
     configALMotion(ALWALK_PRIMITIVE_SIDEWAYS);
     alMotion->post.walkSideways(-6, alWalkConfigs[ALWALK_PRIMITIVE_SIDEWAYS].CyclesPerStep);
+#endif
 }
 
 /*! Turn left (rotate anticlockwise) on the spot until another direction is called, or the walk is stopped (whether explicitly or implicitly)
@@ -383,6 +419,7 @@ void ALWalk::goRight()
  */
 void ALWalk::goTurnLeft()
 {
+#if JWALK_ALMOTION
     if (walkIsActive())
     {
         if (alWalkGoDirection == ALWALK_DIRECTION_TURN_LEFT)          // if we are already walking forward don't reissue the command
@@ -393,6 +430,7 @@ void ALWalk::goTurnLeft()
     alWalkGoDirection = ALWALK_DIRECTION_TURN_LEFT;
     configALMotion(ALWALK_PRIMITIVE_TURN);
     alMotion->post.turn(15*3.14, alWalkConfigs[ALWALK_PRIMITIVE_TURN].CyclesPerStep);
+#endif
 }
 
 /*! Turn right (rotate clockwise) on the spot until another direction is called, or the walk is stopped (whether explicitly or implicitly)
@@ -401,6 +439,7 @@ void ALWalk::goTurnLeft()
  */
 void ALWalk::goTurnRight()
 {
+#if JWALK_ALMOTION
     if (walkIsActive())
     {
         if (alWalkGoDirection == ALWALK_DIRECTION_TURN_RIGHT)          // if we are already walking forward don't reissue the command
@@ -411,6 +450,7 @@ void ALWalk::goTurnRight()
     alWalkGoDirection = ALWALK_DIRECTION_TURN_RIGHT;
     configALMotion(ALWALK_PRIMITIVE_TURN);
     alMotion->post.turn(-15*3.14, alWalkConfigs[ALWALK_PRIMITIVE_TURN].CyclesPerStep);
+#endif
 }
 
 /*! Returns true if there is an active g task. Returns false otherwise
@@ -419,10 +459,14 @@ void ALWalk::goTurnRight()
  */
 bool ALWalk::gIsActive()
 {
+#if JWALK_ALMOTION
     if (alWalkGoDirection == ALWALK_DIRECTION_UNDEFINED)            // if there isn't a defined direction then g is not 'active'
         return false;
     else
         return walkIsActive();
+#else
+    return false;
+#endif
 }
 
 /* Send the gait primitive configuration to almotion
@@ -430,6 +474,7 @@ bool ALWalk::gIsActive()
  */
 void ALWalk::configALMotion(ALWalkPrimitiveEnum primitive)
 {
+#if JWALK_ALMOTION
     alwalkconfig_t* config = &alWalkConfigs[primitive];
     // Firstly I need to 'copy' the primitives hardnesses to the public 
     alWalkHardnesses = config->Hardnesses;
@@ -439,6 +484,7 @@ void ALWalk::configALMotion(ALWalkPrimitiveEnum primitive)
     
     // walkExtraConfig
     alMotion->setWalkExtraConfig(config->LHipBacklash, config->RHipBacklash, config->HipHeight, config->TorsoOrientation);
+#endif
 }
 
 /********************************************************************************************************************************************************************
@@ -449,6 +495,7 @@ void ALWalk::configALMotion(ALWalkPrimitiveEnum primitive)
  */
 void ALWalk::readConfigs()
 {
+#if JWALK_ALMOTION
 #if ALWALK_VERBOSITY > 0
     thelog << "ALWALK: Reading configurations for almotion's walk primitives." << endl;
 #endif
@@ -472,6 +519,7 @@ void ALWalk::readConfigs()
         thelog << alWalkConfigs[i].DistanceCommandFactor << ", " << alWalkConfigs[i].AngleCommandFactor << ", " << alWalkConfigs[i].DistanceOdometryFactor << ", "<<  alWalkConfigs[i].AngleOdometryFactor << endl;
     }
 #endif
+#endif
 }
 
 /* Reads the almotion walk primitive configuration file, and saves the data into the config struct
@@ -480,6 +528,7 @@ void ALWalk::readConfigs()
  */
 void ALWalk::readConfig(string name, alwalkconfig_t* config)
 {
+#if JWALK_ALMOTION
 #if ALWALK_VERBOSITY > 1
     thelog << "ALWALK: Reading config file for " << name << endl;
 #endif
@@ -568,6 +617,7 @@ void ALWalk::readConfig(string name, alwalkconfig_t* config)
     thelog << config->StepLength << ", " << config->StepHeight << ", " << config->StepSide << ", " << config->StepTurn << ", " << config->ZMPX << ", " << config->ZMPY << endl;
     thelog << config->LHipBacklash << ", " << config->RHipBacklash << ", " << config->HipHeight << ", " << config->TorsoOrientation << endl;
     thelog << config->DistanceCommandFactor << ", " << config->AngleCommandFactor << ", " << config->DistanceOdometryFactor << ", " << config->AngleOdometryFactor << endl;
+#endif
 #endif
 }
 
