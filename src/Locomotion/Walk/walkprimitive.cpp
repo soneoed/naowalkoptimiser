@@ -441,8 +441,13 @@ void WalkPrimitive::loadSteps(string primitivename, unsigned char numvalues, str
     {
         StepLeftDirectionToIndex = (StepsLastLeftDirection - StepsFirstLeftDirection)/(Steps[StepsLastLeftDirection].lfirst->StepDirection - Steps[StepsFirstLeftDirection].lfirst->StepDirection);
         StepRightDirectionToIndex = (StepsLastRightDirection - StepsFirstRightDirection)/(Steps[StepsLastRightDirection].lfirst->StepDirection - Steps[StepsFirstRightDirection].lfirst->StepDirection);
-        StepLeftDirectionToIndexOffset = StepsFirstLeftDirection - 1;
-        StepRightDirectionToIndexOffset = StepsFirstRightDirection - 1;
+        StepLeftDirectionToIndexOffset = StepsFirstLeftDirection;
+        StepRightDirectionToIndexOffset = StepsFirstRightDirection;
+        
+        #if WALKPRIMITIVE_VERBOSITY > 1
+            thelog << "WALKPRIMITIVE: Calculating Arc/Turn Index Limits: left:" << StepLeftDirectionToIndex << ", " << (int)StepLeftDirectionToIndexOffset << " right:" << StepRightDirectionToIndex << ", " << (int)StepRightDirectionToIndexOffset << endl;
+            thelog << "WALKPRIMITIVE: First left:" << Steps[StepLeftDirectionToIndexOffset].lfirst->Name << " Right first:" << Steps[StepRightDirectionToIndexOffset].rfirst->Name;
+        #endif
     }
 }
 
