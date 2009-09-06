@@ -27,7 +27,7 @@ using namespace std;
 using namespace AL;
 
 //<EXE_INCLUDE> don't remove this comment
-#include "jwalk.h"
+#include "Locomotion/Walk/jwalk.h"
 
 //</EXE_INCLUDE> don't remove this comment
 
@@ -36,7 +36,7 @@ using namespace AL;
 //</ODECLAREINSTANCE> don't remove this comment
 
 
-#ifdef JASON_IS_REMOTE_OFF
+#ifdef WALKOPTIMISER_IS_REMOTE_OFF
 
 #ifdef _WIN32
     #error You can not compile jason for Windows
