@@ -19,7 +19,7 @@
     
 #define SENSOR_LOGGING          0               // enable logging of all data by setting this to 1
 #define SENSOR_ULTRASONIC_ON    1               // enable the ultrasonic sensors by setting this to 1
-#define SENSOR_EXPORT_TO_AL     0               // set this to 1 to export additional soft sensors to almemory
+#define SENSOR_EXPORT_TO_AL     1               // set this to 1 to export additional soft sensors to almemory
 
 
 /**************************************************************************************
@@ -152,6 +152,34 @@ extern string indexToTemperatureSensor[];
 #define DN_R_ANKLE_PITCH_TEMPERATURE     std::string("Device/SubDeviceList/RAnklePitch/Temperature/Sensor/Value") 
 #define DN_R_ANKLE_ROLL_TEMPERATURE      std::string("Device/SubDeviceList/RAnkleRoll/Temperature/Sensor/Value")
 
+// Boards
+extern string indexToBoardError[];
+#define DN_MB_CHEST                     std::string("Device/DeviceList/ChestBoard/Error")
+#define DN_MB_HEAD                      std::string("Device/DeviceList/HeadBoard/Error")
+#define DN_MB_R_SHOULDER                std::string("Device/DeviceList/RightShoulderBoard/Error")
+#define DN_MB_R_ARM                     std::string("Device/DeviceList/RightArmBoard/Error")
+#define DN_MB_R_HAND                    std::string("Device/DeviceList/RightHandBoard/Error")
+#define DN_MB_R_HIP                     std::string("Device/DeviceList/RightHipBoard/Error")
+#define DN_MB_R_THIGH                   std::string("Device/DeviceList/RightThighBoard/Error")
+#define DN_MB_R_SHIN                    std::string("Device/DeviceList/RightShinBoard/Error")
+#define DN_MB_R_FOOT                    std::string("Device/DeviceList/RightFootBoard/Error")
+#define DN_MB_L_SHOULDER                std::string("Device/DeviceList/LeftShoulderBoard/Error")
+#define DN_MB_L_ARM                     std::string("Device/DeviceList/LeftArmBoard/Error")
+#define DN_MB_L_HAND                    std::string("Device/DeviceList/LeftHandBoard/Error")
+#define DN_MB_L_HIP                     std::string("Device/DeviceList/LeftHipBoard/Error")
+#define DN_MB_L_THIGH                   std::string("Device/DeviceList/LeftThighBoard/Error")
+#define DN_MB_L_SHIN                    std::string("Device/DeviceList/LeftShinBoard/Error")
+#define DN_MB_L_FOOT                    std::string("Device/DeviceList/LeftFootBoard/Error")
+#define DN_MB_US                        std::string("Device/DeviceList/USBoard/Error")
+#define DN_MB_INERTIAL                  std::string("Device/DeviceList/InertialSensor/Error")
+#define DN_MB_TOUCH                     std::string("Device/DeviceList/TouchBoard/Error")
+#define DN_MB_FACE                      std::string("Device/DeviceList/FaceBoard/Error")
+#define DN_MB_EAR                       std::string("Device/DeviceList/EarLeds/Error")
+
+// Nacks
+extern string indexToNack[];
+#define DN_NK_CHEST                     std::string("Device/DeviceList/ChestBoard/Nack")
+
 // Balance
 extern string indexToBalanceSensor[];
 #define DN_ACCEL_X                  std::string("Device/SubDeviceList/InertialSensor/AccX/Sensor/Value")
@@ -226,6 +254,39 @@ enum{
     J_NUM_JOINTS
 };
 
+// Motors Boards:
+enum{
+    MB_CHEST,
+    MB_HEAD,
+    MB_R_SHOULDER,
+    MB_R_ARM,
+    MB_R_HAND,
+    MB_R_HIP,
+    MB_R_THIGH,
+    MB_R_SHIN,
+    MB_R_FOOT,
+    MB_L_SHOULDER,
+    MB_L_ARM,
+    MB_L_HAND,
+    MB_L_HIP,
+    MB_L_THIGH,
+    MB_L_SHIN,
+    MB_L_FOOT,
+    MB_US,
+    MB_INERTIAL,
+    MB_TOUCH,
+    MB_FACE,
+    MB_EAR,
+    MB_NUM_BOARDS
+};
+
+// Nacks
+
+enum{
+    NK_CHEST,
+    NK_NUM_BOARDS
+};
+
 // Balance sensors: accelerometer, gyro and Aldebaran's angle
 enum{
   // Accelerometers
@@ -265,6 +326,19 @@ enum{
     T_CHEST_BUTTON,
     T_NUM_SENSORS
 };
+
+// FSR sensors:
+enum{
+    FSR_L_FSR_FL,
+    FSR_L_FSR_FR,
+    FSR_L_FSR_BL,
+    FSR_L_FSR_BR,
+    FSR_R_FSR_FL,
+    FSR_R_FSR_FR,
+    FSR_R_FSR_BL,
+    FSR_R_FSR_BR,
+    FSR_NUM_SENSORS
+}
 
 // Energy sensors: battery
 enum{
@@ -311,9 +385,15 @@ extern float jointCurrents[J_NUM_JOINTS];
 extern float jointCurrentSum;
 extern float jointTargets[J_NUM_JOINTS];
 extern float jointHardnesses[J_NUM_JOINTS];
+extern int boardErrors[MB_NUM_BOARDS];
+extern int nackErrors[NK_NUM_BOARDS];
 extern unsigned char walkCyclesSinceCall;   // I need this so that walkIsActive is true immediately after a call to walk!
 extern bool walkAmIWalking;
 extern bool walkPreviousAmIWalking;         // I need this one to detect when the robot stops
+
+extern float odometryDeltaX;            // x odometry change in cm
+extern float odometryDeltaY;            // y odometry change in cm
+extern float odometryDeltaO;            // orientation change in cm
 
 // Thermoception Feedback Data.
 extern float jointTemperatures[J_NUM_JOINTS];
@@ -336,6 +416,7 @@ extern float touchLeftCoPX;
 extern float touchLeftCoPY;
 extern float touchRightCoPX;
 extern float touchRightCoPY;
+extern float touchFSRValues[FSR_NUM_SENSORS];
 extern bool touchOnGround;
 extern bool touchPreviousOnGround;
 extern bool touchLeftFootOnGround;
@@ -384,6 +465,8 @@ class Sensors
     void createLogs();
     void finishLogs();
     
+    void calculateOdometry();
+    
     static void sendUSCommandToDCM(float value);
     static void sleepMSec(timespec* nextWakeTime, int msec);
     
@@ -402,6 +485,7 @@ class Sensors
     void filterJointVelocities();
     
     void calculateSoftSensors();
+    void calculateFootForceReadings();
     void calculateCoP();
     void determineWhetherOnGround();
     void determineWhetherWalking();

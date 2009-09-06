@@ -17,6 +17,7 @@
  */
 
 #include "sensors.h"
+#include "../../Kinematics/Kinematics.h"
 
 // The current DCM time (ms) since object creation
 int dcmTime = 0;
@@ -31,9 +32,15 @@ float jointCurrents[J_NUM_JOINTS];
 float jointCurrentSum;
 float jointTargets[J_NUM_JOINTS];
 float jointHardnesses[J_NUM_JOINTS];
+int boardErrors[MB_NUM_BOARDS];
+int nackErrors[NK_NUM_BOARDS];
 unsigned char walkCyclesSinceCall;   // I need this so that walkIsActive is true immediately after a call to walk!
 bool walkAmIWalking;
 bool walkPreviousAmIWalking;         // I need this one to detect when the robot stops
+
+float odometryDeltaX;            // x odometry change in cm
+float odometryDeltaY;            // y odometry change in cm
+float odometryDeltaO;            // orientation change in cm
 
 // Thermoception Feedback Data.
 float jointTemperatures[J_NUM_JOINTS];
@@ -56,6 +63,7 @@ float touchLeftCoPX;
 float touchLeftCoPY;
 float touchRightCoPX;
 float touchRightCoPY;
+float touchFSRValues[FSR_NUM_SENSORS];
 bool touchOnGround;
 bool touchPreviousOnGround;
 bool touchLeftFootOnGround;
@@ -93,6 +101,8 @@ string indexToCurrentSensor[] = {DN_HEAD_YAW_CURRENT, DN_HEAD_PITCH_CURRENT, DN_
 string indexToTargetSensor[] = {DN_HEAD_YAW_TARGET, DN_HEAD_PITCH_TARGET, DN_L_SHOULDER_ROLL_TARGET, DN_L_SHOULDER_PITCH_TARGET, DN_L_ELBOW_YAW_TARGET, DN_L_ELBOW_ROLL_TARGET, DN_R_SHOULDER_ROLL_TARGET, DN_R_SHOULDER_PITCH_TARGET, DN_R_ELBOW_YAW_TARGET, DN_R_ELBOW_ROLL_TARGET, DN_L_HIP_YAWPITCH_TARGET, DN_L_HIP_ROLL_TARGET, DN_L_HIP_PITCH_TARGET, DN_L_KNEE_PITCH_TARGET, DN_L_ANKLE_PITCH_TARGET, DN_L_ANKLE_ROLL_TARGET, DN_R_HIP_YAWPITCH_TARGET, DN_R_HIP_ROLL_TARGET, DN_R_HIP_PITCH_TARGET, DN_R_KNEE_PITCH_TARGET, DN_R_ANKLE_PITCH_TARGET, DN_R_ANKLE_ROLL_TARGET};
 string indexToHardnessSensor[] = {DN_HEAD_YAW_HARDNESS, DN_HEAD_PITCH_HARDNESS, DN_L_SHOULDER_ROLL_HARDNESS, DN_L_SHOULDER_PITCH_HARDNESS, DN_L_ELBOW_YAW_HARDNESS, DN_L_ELBOW_ROLL_HARDNESS, DN_R_SHOULDER_ROLL_HARDNESS, DN_R_SHOULDER_PITCH_HARDNESS, DN_R_ELBOW_YAW_HARDNESS, DN_R_ELBOW_ROLL_HARDNESS, DN_L_HIP_YAWPITCH_HARDNESS, DN_L_HIP_ROLL_HARDNESS, DN_L_HIP_PITCH_HARDNESS, DN_L_KNEE_PITCH_HARDNESS, DN_L_ANKLE_PITCH_HARDNESS, DN_L_ANKLE_ROLL_HARDNESS, DN_R_HIP_YAWPITCH_HARDNESS, DN_R_HIP_ROLL_HARDNESS, DN_R_HIP_PITCH_HARDNESS, DN_R_KNEE_PITCH_HARDNESS, DN_R_ANKLE_PITCH_HARDNESS, DN_R_ANKLE_ROLL_HARDNESS};
 string indexToTemperatureSensor[] = {DN_HEAD_YAW_TEMPERATURE, DN_HEAD_PITCH_TEMPERATURE, DN_L_SHOULDER_ROLL_TEMPERATURE, DN_L_SHOULDER_PITCH_TEMPERATURE, DN_L_ELBOW_YAW_TEMPERATURE, DN_L_ELBOW_ROLL_TEMPERATURE, DN_R_SHOULDER_ROLL_TEMPERATURE, DN_R_SHOULDER_PITCH_TEMPERATURE, DN_R_ELBOW_YAW_TEMPERATURE, DN_R_ELBOW_ROLL_TEMPERATURE, DN_L_HIP_YAWPITCH_TEMPERATURE, DN_L_HIP_ROLL_TEMPERATURE, DN_L_HIP_PITCH_TEMPERATURE, DN_L_KNEE_PITCH_TEMPERATURE, DN_L_ANKLE_PITCH_TEMPERATURE, DN_L_ANKLE_ROLL_TEMPERATURE, DN_R_HIP_YAWPITCH_TEMPERATURE, DN_R_HIP_ROLL_TEMPERATURE, DN_R_HIP_PITCH_TEMPERATURE, DN_R_KNEE_PITCH_TEMPERATURE, DN_R_ANKLE_PITCH_TEMPERATURE, DN_R_ANKLE_ROLL_TEMPERATURE};
+string indexToBoardError[] = {DN_MB_CHEST, DN_MB_HEAD, DN_MB_R_SHOULDER, DN_MB_R_ARM, DN_MB_R_HAND, DN_MB_R_HIP, DN_MB_R_THIGH, DN_MB_R_SHIN, DN_MB_R_FOOT, DN_MB_L_SHOULDER, DN_MB_L_ARM, DN_MB_L_HAND, DN_MB_L_HIP, DN_MB_L_THIGH, DN_MB_L_SHIN, DN_MB_L_FOOT, DN_MB_US, DN_MB_INERTIAL, DN_MB_TOUCH, DN_MB_FACE, DN_MB_EAR};
+string indexToNack[] = {DN_NK_CHEST};
 string indexToBalanceSensor[] = {DN_ACCEL_X, DN_ACCEL_Y, DN_ACCEL_Z, DN_ANGLE_X, DN_ANGLE_Y, DN_GYRO_X, DN_GYRO_Y};
 string indexToTouchSensor[] = {DN_L_FSR_FL, DN_L_FSR_FR, DN_L_FSR_BL, DN_L_FSR_BR, DN_L_BUMP_L, DN_L_BUMP_R, DN_R_FSR_FL, DN_R_FSR_FR, DN_R_FSR_BL, DN_R_FSR_BR, DN_R_BUMP_L, DN_R_BUMP_R, DN_CHEST_BUTTON};
 string indexToBatterySensor[] = {DN_CHARGE, DN_CURRENT, DN_VOLTAGE_MIN, DN_VOLTAGE_MAX, DN_TEMPERATURE};
@@ -135,6 +145,10 @@ Sensors::Sensors(AL::ALPtr<AL::ALBroker> pBroker)
     }
     walkAmIWalking = false;
     walkPreviousAmIWalking = false;
+    
+    odometryDeltaX = 0;
+    odometryDeltaY = 0;
+    odometryDeltaO = 0;
     
     // Initialise balance values (because they need to be filtered)
     for (int i=0; i < B_NUM_SENSORS; i++)
@@ -304,6 +318,18 @@ void Sensors::connectALMemoryFastAccess(AL::ALPtr<AL::ALBroker> pBroker)
         namelist.arrayPush(indexToTemperatureSensor[i]);
     }
     
+    // add board error names
+    for (int i=0; i<MB_NUM_BOARDS; i++)
+    {
+        namelist.arrayPush(indexToBoardError[i]);
+    }
+    
+    // add nack error names
+    for (int i=0; i<NK_NUM_BOARDS; i++)
+    {
+        namelist.arrayPush(indexToNack[i]);
+    }
+    
     // add balance names
     for (int i=0; i<B_NUM_SENSORS; i++)
     {
@@ -401,6 +427,20 @@ void Sensors::getFastMemData()
     for (int i=0; i<J_NUM_JOINTS; i++)
     {
         jointTemperatures[i] = fastmemdata[fastmemindex];
+        fastmemindex++;
+    }
+    
+    // board errors
+    for (int i=0; i<MB_NUM_BOARDS; i++)
+    {
+        boardErrors[i] = fastmemdata[fastmemindex];
+        fastmemindex++;
+    }
+    
+    // nacks
+    for (int i=0; i<NK_NUM_BOARDS; i++)
+    {
+        nackErrors[i] = fastmemdata[fastmemindex];
         fastmemindex++;
     }
     
@@ -522,6 +562,7 @@ void Sensors::calculateSoftSensors()
     alStm->insertData("Jason/Misc/jointCurrentSum", jointCurrentSum, 0);    
 #endif
     
+    calculateFootForceReadings();
     calculateCoP();
     determineWhetherOnGround();
     determineWhetherWalking();
@@ -568,25 +609,131 @@ void Sensors::calculateJointAccelerations()
    return;
 }
 
+/* Calculates odometry using Steve's kinematics
+ Postconditions: odometryDeltaX, odometryDeltaY, odometryDeltaO are updated with new values
+ */
+void Sensors::calculateOdometry()
+{
+    const float turnMultiplier = 1.0;
+    const float xMultiplier = -1.25;
+    const float yMultiplier = -1.0;
+    
+    static float previousHipYaw = 0;
+    static float previousLeftX = 0;
+    static float previousLeftY = 0;
+    static float previousRightX = 0;
+    static float previousRightY = 0;
+    
+    Kinematics *kin = &Kinematics::getInstance();
+    // Get Feet Positions
+    vector<float> leftFootPosition = kin->GetLeftFootPosition();
+    vector<float> rightFootPosition = kin->GetRightFootPosition();
+    // Get Hip Position
+    float hipYaw = jointPositions[J_L_HIP_YAWPITCH];
+    
+    float leftX = leftFootPosition[0];
+    float rightX = rightFootPosition[0]; 
+    float leftY = leftFootPosition[1];
+    float rightY = rightFootPosition[1];
+    
+    // Distances moved in the last frame
+    float angleDiff = 0.0;     // change in orientation since last frame
+    float xDiff = 0.0;         // change in forward direction (these are in metres because Aldebaran is in metres)
+    float yDiff = 0.0;         // change in sideways direction
+    
+    if (touchLeftFootOnGround == true && touchRightFootOnGround == false)     // on left foot
+    {
+        angleDiff = turnMultiplier*(hipYaw - previousHipYaw);
+        xDiff = xMultiplier*(leftX - previousLeftX);         
+        yDiff = yMultiplier*(leftY - previousLeftY);
+    }
+    else if (touchLeftFootOnGround == false && touchRightFootOnGround == true)   // on right foot
+    {
+        angleDiff = -turnMultiplier*(hipYaw - previousHipYaw);
+        xDiff = xMultiplier*(rightX - previousRightX);
+        yDiff = yMultiplier*(rightY - previousRightY);
+        
+    } 
+    else if(touchLeftFootOnGround == true && touchRightFootOnGround == true)
+    {
+        float leftsum = touchValues[T_L_FSR_FL] + touchValues[T_L_FSR_FR] + touchValues[T_L_FSR_BL] + touchValues[T_L_FSR_BR];
+        float rightsum = touchValues[T_R_FSR_FL] + touchValues[T_R_FSR_FR] + touchValues[T_R_FSR_BL] + touchValues[T_R_FSR_BR];
+        
+        if((leftsum - rightsum) > 1500){
+            angleDiff = -turnMultiplier*(hipYaw - previousHipYaw);
+            xDiff = xMultiplier*(rightX - previousRightX);        
+            yDiff = yMultiplier*(rightY - previousRightY);
+        }
+        else if((rightsum -leftsum) > 1500)
+        {
+            angleDiff = turnMultiplier*(hipYaw - previousHipYaw); 
+            xDiff = xMultiplier*(leftX - previousLeftX);          
+            yDiff = yMultiplier*(leftY - previousLeftY);          
+        }
+        
+    }
+    
+    // Update historic variables   
+    previousHipYaw = hipYaw;
+    previousLeftX = leftX;
+    previousRightX = rightX;
+    previousLeftY = leftY;
+    previousRightY = rightY;
+    
+    // copy values to global parameters
+    odometryDeltaX = xDiff;
+    odometryDeltaY = yDiff;
+    odometryDeltaO = angleDiff;
+    
+    return;
+}
+
+/* Calculate the centre of pressure (ZMP) under each foot
+ Postconditions: touchLeftCoPX, touchLeftCoPY, touchRightCoPX, touchRightCoPY are set to the calculated values in centimetres
+ */
+void Sensors::calculateFootForceReadings()
+{
+    // TO DO: I need to convert the sensor readings into newtons
+    static const float m = 8900;                // values determined by experiment
+    static const float b = -1.77;
+    touchFSRValues[FSR_L_FSR_FL] = (1.0/touchValues[T_L_FSR_FL])*m + b;
+    touchFSRValues[FSR_L_FSR_FR] = (1.0/touchValues[T_L_FSR_FR])*m + b
+    touchFSRValues[FSR_L_FSR_BL] = (1.0/touchValues[T_L_FSR_BL])*m + b
+    touchFSRValues[FSR_L_FSR_BR] = (1.0/touchValues[T_L_FSR_BR])*m + b
+    
+    touchFSRValues[FSR_R_FSR_FL] = (1.0/touchValues[T_R_FSR_FL])*m + b
+    touchFSRValues[FSR_R_FSR_FR] = (1.0/touchValues[T_R_FSR_FR])*m + b
+    touchFSRValues[FSR_R_FSR_BL] = (1.0/touchValues[T_R_FSR_BL])*m + b
+    touchFSRValues[FSR_R_FSR_BR] = (1.0/touchValues[T_R_FSR_BR])*m + b
+    
+#if SENSOR_EXPORT_TO_AL
+    alStm->insertData("Jason/Touch/touchLeftFSRFL", touchFSRValues[FSR_L_FSR_FL], 0);
+    alStm->insertData("Jason/Touch/touchLeftFSRFR", touchFSRValues[FSR_L_FSR_FR], 0);    
+    alStm->insertData("Jason/Touch/touchLeftFSRBL", touchFSRValues[FSR_L_FSR_BL], 0);
+    alStm->insertData("Jason/Touch/touchLeftFSRBR", touchFSRValues[FSR_L_FSR_BR], 0);
+    
+    alStm->insertData("Jason/Touch/touchRightFSRFL", touchFSRValues[FSR_R_FSR_FL], 0);
+    alStm->insertData("Jason/Touch/touchRightFSRFR", touchFSRValues[FSR_R_FSR_FR], 0);    
+    alStm->insertData("Jason/Touch/touchRightFSRBL", touchFSRValues[FSR_R_FSR_BL], 0);
+    alStm->insertData("Jason/Touch/touchRightFSRBR", touchFSRValues[FSR_R_FSR_BR], 0);
+#endif
+}
+
 /* Calculate the centre of pressure (ZMP) under each foot
  Postconditions: touchLeftCoPX, touchLeftCoPY, touchRightCoPX, touchRightCoPY are set to the calculated values in centimetres
  */
 void Sensors::calculateCoP()
 {
-    // TO DO: I need to convert the sensor readings into newtons
-    static const float forcescalar = 5500;
-    static const float maxvalue = 500;
-    static const float zerovalue = 2500;
     float lfl, lfr, lbl, lbr, rfl, rfr, rbl, rbr;
-    lfl = forcescalar/touchValues[T_L_FSR_FL];
-    lfr = forcescalar/touchValues[T_L_FSR_FR]; 
-    lbl = forcescalar/touchValues[T_L_FSR_BL]; 
-    lbr = forcescalar/touchValues[T_L_FSR_BR];
+    lfl = touchFSRValues[FSR_L_FSR_FL];
+    lfr = touchFSRValues[FSR_L_FSR_FR]; 
+    lbl = touchFSRValues[FSR_L_FSR_BL]; 
+    lbr = touchFSRValues[FSR_L_FSR_BR];
 
-    rfl = forcescalar/touchValues[T_R_FSR_FL];
-    rfr = forcescalar/touchValues[T_R_FSR_FR];
-    rbl = forcescalar/touchValues[T_R_FSR_BL];
-    rbr = forcescalar/touchValues[T_R_FSR_BR];
+    rfl = touchFSRValues[FSR_R_FSR_FL];
+    rfr = touchFSRValues[FSR_R_FSR_FR];
+    rbl = touchFSRValues[FSR_R_FSR_BL];
+    rbr = touchFSRValues[FSR_R_FSR_BR];
 
     touchLeftCoPX = (7.10*lfl + 7.10*lfr - 3.04*lbl - 2.98*lbr)/(lfl + lfr + lbl + lbr);
     touchLeftCoPY = (3.00*lfl - 2.30*lfr + 3.00*lbl - 1.90*lbr)/(lfl + lfr + lbl + lbr);
