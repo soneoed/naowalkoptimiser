@@ -13,11 +13,6 @@ int framesSinceGameController;
 
 int packetsSent;
 
-double odomForward;
-double odomLeft;
-double odomTurn;
-double odomReliability;
-
 StoredGamePackets latestReceivedGamePackets[NUM_ROBOTS];
 
 

@@ -98,11 +98,6 @@ extern int framesSinceGameController;
 
 extern int packetsSent;
 
-extern double odomForward;
-extern double odomLeft;
-extern double odomTurn;
-extern double odomReliability; 
-
 #define WM_BUFFERSIZE 6
 
 #define BVR_BUFFERSIZE 6
