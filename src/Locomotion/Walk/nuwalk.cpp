@@ -47,8 +47,8 @@ NUWalk::NUWalk(JWalk* pjwalk)
     PathMinArcRadius = 10;
     PathMaxArcRadius = 50;
     
-    PathPositionAccuracy = 7;           // a rough estimate of the noise in cm (This can be considered the 'accuracy' of the calculated paths)
-    PathBearingAccuracy = atan(PathPositionAccuracy/24.0);
+    PathPositionAccuracy = 5;           // a rough estimate of the noise in cm (This can be considered the 'accuracy' of the calculated paths)
+    PathBearingAccuracy = atan(PathPositionAccuracy/20.0);
     PathInfPathTime = 600;              // infinite path time in seconds (ie the path will never reach the target)
     
     initPrimitives();
@@ -267,11 +267,6 @@ void NUWalk::determineNextStep()
         else
             thelog << "NUWALK: determineNextStep(): Selected a NULL step. This could be bad." << endl;
     #endif
-    /*    if (CurrentStep == NULL)
-     {
-     thelog << "NUWALK: selectNextGStep(): ERROR: I have selected a NULL step. This is bad :(" << endl;
-     CurrentStep = PreviousStep->NaturalNext;
-     }*/
 }
 
 void NUWalk::getActionOnBearing(action_t* action, float bearing)
@@ -281,7 +276,7 @@ void NUWalk::getActionOnBearing(action_t* action, float bearing)
         action->Type = TYPE_FORWARD;
         action->Direction = 0;
     }
-    else if (fabs(bearing) < 1.2)
+    else if (fabs(bearing) < 2.6)
     {
         action->Type = TYPE_ARC;
         action->Direction = 2*6.5/bearing;
@@ -310,59 +305,68 @@ void NUWalk::getActionToPoint(action_t* action, float distance, float bearing)
     TargetBearing = wrapAngle(bearing);
     TargetRelativeX = distance*cos(bearing);
     TargetRelativeY = distance*sin(bearing);
-
-    // Firstly, calculate the path times for each of the 6 possible paths to the point
-    const static unsigned char numpaths = 6;
-    #if NUWALK_VERBOSITY > 0
-        static string indextopathname[numpaths] = {string("Straight"), string("Arc"), string("Backward"), string("TurnBackward"), string("Sideward"), string("TurnSideward")};
-    #endif
-    float pathtimes[numpaths]; 
-    pathtimes[0] = calculateStraightPathTime();
-    pathtimes[1] = calculateArcPathTime();
-    pathtimes[2] = calculateBackwardPathTime();
-    pathtimes[3] = calculateTurnStopBackwardPathTime();     
-    pathtimes[4] = calculateSidewardPathTime();
-    pathtimes[5] = calculateTurnStopSidewardPathTime();
-
-    // Now decide which of those paths is the fastest
-    int minpathindex = 0;
-    float minpathtime = PathInfPathTime + 10;
-    for (unsigned char i = 0; i < numpaths; i++)
+    
+    if (TargetDistance < 0.5*PathPositionAccuracy)
     {
-        if (pathtimes[i] < minpathtime)
-        {
-            minpathindex = i;
-            minpathtime = pathtimes[i];
-        }
+        action->Type = TYPE_NONE;
+        action->Direction = 0;
     }
-    
-    #if NUWALK_VERBOSITY > 2
-        thelog << "NUWALK: getActionToPoint(). Path times: ";
-        for (unsigned char i =0; i < numpaths; i++)
-        {
-            thelog << pathtimes[i] << ", ";
-        }
-        thelog << endl;
-    #endif
-    
-    // Now implement the fastest path. That is set action.bearing and action.type.
-    if (minpathindex == 0)
-        setStraightAction(action);
-    else if (minpathindex == 1)
-        setArcAction(action);
-    else if (minpathindex == 2)
-        setBackwardAction(action);
-    else if (minpathindex == 3)
-        setTurnStopBackwardAction(action);
-    else if (minpathindex == 4)
-        setSidewardAction(action);
-    else if (minpathindex == 5)
-        setTurnStopSidewardAction(action);
-    
-#if NUWALK_VERBOSITY > 0
-    thelog << "NUWALK: getActionToPoint() Path: " << indextopathname[minpathindex] << " action: " << action->Type << " " << action->Direction;
-#endif
+    else
+    {
+        // Firstly, calculate the path times for each of the 6 possible paths to the point
+        const static unsigned char numpaths = 6;
+        #if NUWALK_VERBOSITY > 0
+            static string indextopathname[numpaths] = {string("Straight"), string("Arc"), string("Backward"), string("TurnBackward"), string("Sideward"), string("TurnSideward")};
+        #endif
+        float pathtimes[numpaths]; 
+        pathtimes[0] = calculateStraightPathTime();
+        pathtimes[1] = calculateArcPathTime();
+        pathtimes[2] = calculateBackwardPathTime();
+        pathtimes[3] = calculateTurnStopBackwardPathTime();     
+        pathtimes[4] = calculateSidewardPathTime();
+        pathtimes[5] = calculateTurnStopSidewardPathTime();
 
+        // Now decide which of those paths is the fastest
+        int minpathindex = 0;
+        float minpathtime = PathInfPathTime + 10;
+        for (unsigned char i = 0; i < numpaths; i++)
+        {
+            if (pathtimes[i] < minpathtime)
+            {
+                minpathindex = i;
+                minpathtime = pathtimes[i];
+            }
+        }
+        
+        #if NUWALK_VERBOSITY > 2
+            thelog << "NUWALK: getActionToPoint(). Path times: ";
+            for (unsigned char i =0; i < numpaths; i++)
+            {
+                thelog << pathtimes[i] << ", ";
+            }
+            thelog << endl;
+        #endif
+        
+        // Now implement the fastest path. That is set action.bearing and action.type.
+        if (minpathindex == 0)
+            setStraightAction(action);
+        else if (minpathindex == 1)
+            setArcAction(action);
+        else if (minpathindex == 2)
+            setBackwardAction(action);
+        else if (minpathindex == 3)
+            setTurnStopBackwardAction(action);
+        else if (minpathindex == 4)
+            setSidewardAction(action);
+        else if (minpathindex == 5)
+            setTurnStopSidewardAction(action);
+        #if NUWALK_VERBOSITY > 0
+            thelog << "NUWALK: getActionToPoint() Path: " << indextopathname[minpathindex] << endl;
+        #endif
+    }
+    #if NUWALK_VERBOSITY > 0
+        thelog << "NUWALK: getActionToPoint() Action: " << action->Type << " " << action->Direction << endl;
+    #endif
 }
 
 /*! Returns the time to reach the target in seconds. If the target can not be reached then PathInfPathTime is returned
@@ -421,11 +425,17 @@ float NUWalk::calculateArcPathTime()
     #endif
     float pathtime = 0;
     float R = 0;                            // the radius of the arc in cm
+    float l = 0;                            // the arc length
     if (fabs(TargetBearing) < 0.001 || fabs(fabs(TargetBearing) - PI) < 0.001)
+    {
         R = PathMaxArcRadius;
+        l = TargetDistance;
+    }
     else
+    {
         R = TargetDistance/(2*sin(TargetBearing));
-    float l = fabs(R*2*TargetBearing);      // the length of the arc
+        l = fabs(R*2*TargetBearing);      // the length of the arc
+    }
     pathtime += fabs(l)/PathArcSpeed;       // the time taken to walk on the arc
     
     // apply stop penalty if necessary
@@ -712,56 +722,67 @@ void NUWalk::getActionToPointWithOrientation(action_t* action, float distance, f
     TargetRelativeY = distance*sin(bearing);
     TargetRelativeOrientation = wrapAngle(finalorientation);
     
-    const static unsigned char numpaths = 5;
-    #if NUWALK_VERBOSITY > 0
-        static const string indextopathname[numpaths] = {string("ArcArc"),string("StraightWOrientation"), string("Turn"), string("BackwardWOrientation"), string("SidewardWOrientation")};
-    #endif
-    
-    // Firstly, calculate the path times
-    float pathtimes[numpaths];
-    pathtimes[0] = calculateArcArcPathTime();                   // fancy path
-    pathtimes[1] = calculateStraightWOrientationPathTime();     // forwards
-    pathtimes[2] = calculateTurnPathTime();                     // turn. This is basically a fail-safe, if we have reached the target then turn to the target orientation dammit
-    pathtimes[3] = calculateBackwardWOrientationPathTime();     // backwards
-    pathtimes[4] = calculateSidewardWOrientationPathTime();     // sidewards
-
-    // Now decide which of those paths is the fastest
-    int minpathindex = 0;
-    float minpathtime = PathInfPathTime + 10;
-    for (unsigned char i = 0; i < numpaths; i++)
+    if (TargetDistance < 0.5*PathPositionAccuracy && fabs(TargetRelativeOrientation) < 0.5*PathBearingAccuracy)
     {
-        if (pathtimes[i] < minpathtime)
-        {
-            minpathindex = i;
-            minpathtime = pathtimes[i];
-        }
+        action->Type = TYPE_NONE;
+        action->Direction = 0;
     }
-    
-    #if NUWALK_VERBOSITY > 2
-        thelog << "NUWALK: getActionToPointWithOrientation(). Path times: ";
-        for (unsigned char i =0; i < numpaths; i++)
+    else
+    {
+        const static unsigned char numpaths = 5;
+        #if NUWALK_VERBOSITY > 0
+            static const string indextopathname[numpaths] = {string("ArcArc"),string("StraightWOrientation"), string("Turn"), string("BackwardWOrientation"), string("SidewardWOrientation")};
+        #endif
+        
+        // Firstly, calculate the path times
+        float pathtimes[numpaths];
+        pathtimes[0] = calculateArcArcPathTime();                   // fancy path
+        pathtimes[1] = calculateStraightWOrientationPathTime();     // forwards
+        pathtimes[2] = calculateTurnPathTime();                     // turn. This is basically a fail-safe, if we have reached the target then turn to the target orientation dammit
+        pathtimes[3] = calculateBackwardWOrientationPathTime();     // backwards
+        pathtimes[4] = calculateSidewardWOrientationPathTime();     // sidewards
+
+        // Now decide which of those paths is the fastest
+        int minpathindex = 0;
+        float minpathtime = PathInfPathTime + 10;
+        for (unsigned char i = 0; i < numpaths; i++)
         {
-            thelog << pathtimes[i] << ", ";
+            if (pathtimes[i] < minpathtime)
+            {
+                minpathindex = i;
+                minpathtime = pathtimes[i];
+            }
         }
-        thelog << endl;
-    #endif
+        
+        #if NUWALK_VERBOSITY > 2
+            thelog << "NUWALK: getActionToPointWithOrientation(). Path times: ";
+            for (unsigned char i =0; i < numpaths; i++)
+            {
+                thelog << pathtimes[i] << ", ";
+            }
+            thelog << endl;
+        #endif
 
 
-    // now that I have picked the fastest path calculate the self.action and self.direction to best implement it
-    if (minpathindex == 0)
-        setArcArcAction(action);
-    else if (minpathindex == 1)
-        setStraightWOrientationAction(action);
-    else if (minpathindex == 2)
-        setTurnAction(action);
-    else if (minpathindex == 3)
-        setBackwardWOrientationAction(action);
-    else if (minpathindex == 4)
-        setSidewardWOrientationAction(action);
+        // now that I have picked the fastest path calculate the self.action and self.direction to best implement it
+        if (minpathindex == 0)
+            setArcArcAction(action);
+        else if (minpathindex == 1)
+            setStraightWOrientationAction(action);
+        else if (minpathindex == 2)
+            setTurnAction(action);
+        else if (minpathindex == 3)
+            setBackwardWOrientationAction(action);
+        else if (minpathindex == 4)
+            setSidewardWOrientationAction(action);
+        #if NUWALK_VERBOSITY > 0
+            thelog << "NUWALK: getActionToPointWithOrientation: Path: " << indextopathname[minpathindex] << endl;
+        #endif
+    }
     
     #if NUWALK_VERBOSITY > 0
         thelog << "NUWALK: getActionToPointWithOrientation: (" << TargetDistance << ", " << TargetBearing << "), (" << TargetRelativeX << ", " << TargetRelativeY << ", " <<  TargetRelativeOrientation << ")" << endl;
-        thelog << "NUWALK: getActionToPointWithOrientation: Path: " << indextopathname[minpathindex] << " action: " << action->Type << " " << action->Direction << endl;
+        thelog << "NUWALK: getActionToPointWithOrientation: Action: " << action->Type << " " << action->Direction << endl;
     #endif    
 }
 
@@ -1805,8 +1826,12 @@ void NUWalk::selectNextStep(action_t nextaction)
     #if NUWALK_VERBOSITY > 1
         thelog << "NUWALK: selectNextStep(). CurrentStep:" << CurrentStep << " PreviousStep:" << PreviousStep << endl;
     #endif
-    
-    if (CurrentStep == NULL || PreviousStep == NULL || PreviousStep->StepClass == CLASS_FSTOP || PreviousStep->StepClass == CLASS_NSTOP)
+    if (nextaction.Type == TYPE_NONE)
+    {
+        stop();
+        doStopStep();
+    }
+    else if (CurrentStep == NULL || PreviousStep == NULL || PreviousStep->StepClass == CLASS_FSTOP || PreviousStep->StepClass == CLASS_NSTOP)
         selectStartStep(nextaction);
     else
     {
@@ -1878,13 +1903,8 @@ void NUWalk::selectNextStep(action_t nextaction)
         if (CurrentStep != NULL)
             thelog << "NUWALK: selectNextStep(): " << CurrentStep->Name << endl;
         else
-            thelog << "NUWALK: selectNextStep(): Selected a NULL step. This could be bad." << endl;
+            thelog << "NUWALK: selectNextStep(): Selected a NULL step." << endl;
     #endif
-    /*    if (CurrentStep == NULL)
-     {
-     thelog << "NUWALK: selectNextGStep(): ERROR: I have selected a NULL step. This is bad :(" << endl;
-     CurrentStep = PreviousStep->NaturalNext;
-     }*/
 }
 
 void NUWalk::selectStartStep(action_t action)
@@ -2175,7 +2195,7 @@ void NUWalk::avoidObstaclesForwardWalk(action_t* action)
             dodgeangle = dodgerightangle;
         }
         
-        if (sonicObstacleDistance <= 25 || fabs(dodgeangle) > 0.85)
+        if (sonicObstacleDistance <= 30 || fabs(dodgeangle) > 0.85)
         {   // I want to always sidestep when the obstacle is very close or the dodge angle is large
             action->Type = TYPE_SIDEWARD;
             if (dodgeangle >= 0)
@@ -2184,8 +2204,7 @@ void NUWalk::avoidObstaclesForwardWalk(action_t* action)
                 action->Direction = -1.0;
         }
         else
-        {   // I want to sidestep if the dodge angle is too big to arc along
-            
+        {
             action->Type = TYPE_ARC;
             action->Direction = 2*6.5/dodgeangle;
         }
@@ -2226,7 +2245,7 @@ void NUWalk::avoidCollisions(action_t* action)
 
 void NUWalk::doStopStep()
 {
-    if (PreviousStep->StepClass == CLASS_FSTOP || PreviousStep->StepClass == CLASS_NSTOP || ((PreviousStep->StepType == TYPE_SIDEWARD || PreviousStep->StepType == TYPE_TURN) && ((PreviousStep->StepDirection > 0 && PreviousStep->StepLeft == false) || (PreviousStep->StepDirection < 0 && PreviousStep->StepLeft == true))))
+    if (CurrentStep == NULL || PreviousStep == NULL || PreviousStep->StepClass == CLASS_FSTOP || PreviousStep->StepClass == CLASS_NSTOP || ((PreviousStep->StepType == TYPE_SIDEWARD || PreviousStep->StepType == TYPE_TURN) && ((PreviousStep->StepDirection > 0 && PreviousStep->StepLeft == false) || (PreviousStep->StepDirection < 0 && PreviousStep->StepLeft == true))))
     {   // if the last step was a stop step, then we are now stopped or
         // if sideward or turn and the right direction then we are also stopped
         WalkStopped = true;
