@@ -3,25 +3,29 @@
  *
  * Version : $Id: jwalk.cpp,v 1.10 2009/07/01 18:26:56 jason Exp $
  */
+
+#include "jwalkincludes.h"
+#include "jwalk.h"
+
 #if JWALK_STANDALONE
 #else
     #include "../../Nao.h"    // We working with robocup code I share proxies to aldcm, almemory, and almotion 
 #endif
 
-#include "jwalkincludes.h"
-
-#include "jwalk.h"
 #include "jwalkthread.h"
 #include "boost/bind.hpp"
 
 using namespace AL;
+using namespace std;
 
 #if DEBUG_TO_FILE
     ofstream thelog;
 #endif
 
 // Proxies to Aldebaran Rubbish
-ALPtr<ALMotionProxy> alMotion;
+#if JWALK_ALMOTION
+    ALPtr<ALMotionProxy> alMotion;
+#endif
 ALPtr<ALMemoryProxy> alStm;
 ALMemoryFastAccess* alFastMem;
 ALPtr<ALProxy> alDcm;
@@ -30,7 +34,7 @@ ALPtr<ALProxy> alDcm;
 sem_t semaphoreNewSensorData;
 pthread_t jWalkThread;
 #if JWALK_OPTIMISER
-    #include "jwalkoptimiser.h"             // Include the walk optimiser behaviours
+    #include "../../jwalkoptimiser.h"             // Include the walk optimiser behaviours
     pthread_t jWalkOptimiserThread;
 #endif
 pthread_cond_t jWalkStoppedCondition;
@@ -95,6 +99,12 @@ void JWalk::initSelf()
     JWalkParam1 = 0;
     JWalkParam2 = 0;
     JWalkParam3 = 0;
+    
+#if JWALK_STANDALONE
+    getUpFront = new script("/home/root/StandUpFront.csv", this);
+    getUpBack = new script("/home/root/StandUpBack.csv", this);
+    getUpBackFall = new script("/home/root/StandUpFromBackFall.csv", this);
+#endif
     return;
 }
 
@@ -108,13 +118,19 @@ void JWalk::initAldebaranProxies()
 {
     // Get proxies to Aldebaran rubbish --------------------------------------------------------------------------
 #if JWALK_STANDALONE
-    try 
-    {
-        alMotion = this->getParentBroker()->getMotionProxy();
-        thelog << "JWALK: Get MotionProxy success." << endl;
-    }
-    catch (ALError& e) 
-        thelog << "JWALK: Unable to get MotionProxy: " << e.toString() << endl;
+    ALError e;
+    #if JWALK_ALMOTION
+        try 
+        {
+            alMotion = this->getParentBroker()->getMotionProxy();
+            thelog << "JWALK: Get MotionProxy success." << endl;
+        }
+        catch (ALError& e) 
+        {
+            thelog << "JWALK: Unable to get MotionProxy: " << e.toString() << endl;
+            thelog << "JWALK: alMotion is " << alMotion << endl;
+        }
+    #endif
     
     try 
     {
@@ -122,7 +138,9 @@ void JWalk::initAldebaranProxies()
         thelog << "JWALK: Get MemoryProxy success." << endl;
     }
     catch (ALError& e) 
+    {
         thelog << "JWALK: Unable to get MemoryProxy:" << e.toString() << endl;
+    }
     
     try 
     {
@@ -130,15 +148,23 @@ void JWalk::initAldebaranProxies()
         thelog << "JWALK: Get DCMProxy success." << endl;
     }
     catch (ALError& e) 
-        thelog << "JWALK: Unable to get a proxy on the DCM:" << e.toString() << endl;
-#else
-    try 
     {
-        alMotion = NAO->Parent_Broker->getMotionProxy();
-        thelog << "JWALK: Get MotionProxy success." << endl;
+        thelog << "JWALK: Unable to get a proxy on the DCM:" << e.toString() << endl;
     }
-    catch (ALError& e) 
-        thelog << "JWALK: Unable to get MotionProxy: " << e.toString() << endl;
+#else
+    ALError e;
+    #if JWALK_ALMOTION
+        try 
+        {
+            alMotion = NAO->Parent_Broker->getMotionProxy();
+            thelog << "JWALK: Get MotionProxy success." << endl;
+        }
+        catch (ALError& e) 
+        {
+            thelog << "JWALK: Unable to get MotionProxy: " << e.toString() << endl;
+            thelog << "JWALK: alMotion is " << alMotion << endl;
+        }
+    #endif
     
     try 
     {
@@ -146,7 +172,9 @@ void JWalk::initAldebaranProxies()
         thelog << "JWALK: Get MemoryProxy success." << endl;
     }
     catch (ALError& e) 
+    {
         thelog << "JWALK: Unable to get MemoryProxy:" << e.toString() << endl;
+    }
     
     try 
     {
@@ -154,7 +182,9 @@ void JWalk::initAldebaranProxies()
         thelog << "JWALK: Get DCMProxy success." << endl;
     }
     catch (ALError& e) 
+    {
         thelog << "JWALK: Unable to get a proxy on the DCM:" << e.toString() << endl;
+    }
 #endif
     
     alFastMem = new ALMemoryFastAccess();              // The super secret almemoryfastaccess. Use this for very fast access to variables on a regular basis (ie sensor feedback)
@@ -230,39 +260,37 @@ void JWalk::initWalk()
 #if JWALK_VERBOSITY > 1
     thelog << "JWALK: initWalk(): Moving alMotion into common pose." << endl;
 #endif
-    // assume that the stiffnesses are off!
     float stiffnesses[ALIAS_TARGETS_ALL_LENGTH];
-    for (unsigned char i=0; i<ALIAS_TARGETS_ALL_LENGTH; i++)
-        stiffnesses[i] = 0.03;
-    JWalkActuators->setStiffnessAll(stiffnesses);
-    
-    usleep(500);
-    usleep(1000*(alWalk->goToAnglesWithVelocityNotHead(JWalkCommonPositions, 3.0) - dcmTime));          // move almotion into the common pose (I hope)
-    usleep(1000*(alWalk->goToAnglesWithVelocityNotHead(JWalkCommonPositions, 3.0) - dcmTime));          // move almotion into the common pose (I hope)
-    usleep(100);
-    
-    for (unsigned char i=0; i<ALIAS_TARGETS_ALL_LENGTH; i++)
-        stiffnesses[i] = 0.0;
-    JWalkActuators->setStiffnessAll(stiffnesses);
-    usleep(100);
-    JWalkActuators->clearDCM();
-    usleep(100);
+    #if JWALK_ALMOTION
+        // assume that the stiffnesses are off!
+        for (unsigned char i=0; i<ALIAS_TARGETS_ALL_LENGTH; i++)
+            stiffnesses[i] = 0.03;
+        JWalkActuators->setStiffnessAll(stiffnesses);
+        
+        usleep(500);
+        usleep(1000*(alWalk->goToAnglesWithVelocityNotHead(JWalkCommonPositions, 3.0) - dcmTime));          // move almotion into the common pose (I hope)
+        usleep(1000*(alWalk->goToAnglesWithVelocityNotHead(JWalkCommonPositions, 3.0) - dcmTime));          // move almotion into the common pose (I hope)
+        usleep(100);
+        
+        for (unsigned char i=0; i<ALIAS_TARGETS_ALL_LENGTH; i++)
+            stiffnesses[i] = 0.0;
+        JWalkActuators->setStiffnessAll(stiffnesses);
+        usleep(100);
+        JWalkActuators->clearDCM();
+        usleep(100);
+    #endif
     
     for (unsigned char i=0; i<ALIAS_TARGETS_ALL_LENGTH; i++)
         stiffnesses[i] = 0.8;
     usleep(1000*(JWalkActuators->setStiffnessAll(stiffnesses, 1000) - dcmTime));
-    usleep(100);
+    
+    // don't forget the head
+    float headstiffnesses[2] = {0.25, 0.25};  
+    setHeadStiffness(headstiffnesses);
     
     balanceFallingEnabled = true;
     balanceFallen = true;
     
-    // now actually move the robot into position using my motion
-    //JWalkActuators->setStiffnessNotHead(JWalkCommonHardnesses);
-    //JWalkActuators->goToAnglesWithVelocityNotHead(JWalkCommonPositions, 0.5);
-    
-    // don't forget the head
-    float headstiffnesses[2] = {0.5, 0.5};  
-    setHeadStiffness(headstiffnesses);
 #if JWALK_VERBOSITY > 1
     thelog << "JWALK: initWalk(): Complete; the robot will now getup." << endl;
 #endif
@@ -272,7 +300,7 @@ JWalk::~JWalk()
 {
     pthread_cancel(jWalkThread);
     #if JWALK_OPTIMISER
-        pthread_cancel(jWalkBehaviourThread);
+        pthread_cancel(jWalkOptimiserThread);
     #endif
 }
 
@@ -311,7 +339,7 @@ bool JWalk::modeUsesDCM(JWalkModeEnum mode)
  ********************************************************************************************************************************************************************/
 int JWalk::setHeadYaw(float angle, int time)
 {
-    if (JWalkMode == JWALK_JMODE)
+    if (usingDCM() == true)
         return JWalkActuators->goToAngleHeadYaw(angle, time);
     else
     {
@@ -319,7 +347,9 @@ int JWalk::setHeadYaw(float angle, int time)
             return 0;
         else
         {
-            alMotion->post.gotoAngle("HeadYaw", angle, time/1000.0, 0);
+            #if JWALK_ALMOTION
+                alMotion->post.gotoAngle("HeadYaw", angle, time/1000.0, 0);
+            #endif
             return dcmTime + time;
         }
     }
@@ -327,7 +357,7 @@ int JWalk::setHeadYaw(float angle, int time)
 
 int JWalk::setHeadPitch(float angle, int time)
 {
-    if (JWalkMode == JWALK_JMODE)
+    if (usingDCM() == true)
         return JWalkActuators->goToAngleHeadPitch(angle, time);
     else
     {
@@ -335,7 +365,9 @@ int JWalk::setHeadPitch(float angle, int time)
             return 0;
         else
         {
-            alMotion->post.gotoAngle("HeadPitch", angle, time/1000.0, 0);
+            #if JWALK_ALMOTION
+                alMotion->post.gotoAngle("HeadPitch", angle, time/1000.0, 0);
+            #endif
             return dcmTime + time;
         }       
     }
@@ -440,8 +472,9 @@ void JWalk::emergencyStop()
     // there isn't time for a proper transition; so an emergency stop will leave almotion in an unknown position
     JWalkPreviousMode = JWalkMode;
     JWalkMode = JWALK_SMODE;
-    
+#if JWALK_ALMOTION
     alMotion->killAll();
+#endif
     nuWalk->emergencyStop();
 }
 
@@ -589,6 +622,7 @@ void JWalk::getUp()
     
     if (gettingupstate == 0)
     {   // in the first state we issue the command to change to scripting mode
+        checkAndRepair();
         if (JWalkMode != JWALK_TRANSITION)
         {
             #if JWALK_VERBOSITY > 1
@@ -610,11 +644,29 @@ void JWalk::getUp()
         if (JWalkMode == JWALK_SMODE)
         {
             if (balanceValues[B_ANGLE_Y] < -1.0)        // if on its back
-                getupfinishtime = NAO->m_locomotion->getUpBack.play(false);
+            {
+                #if JWALK_STANDALONE
+                    getupfinishtime = getUpBack->play(false);
+                #else
+                    getupfinishtime = NAO->m_locomotion->getUpBack.play(false);
+                #endif
+            }
             else if (balanceValues[B_ANGLE_Y] > 1.0)    // if on its front
-                getupfinishtime = NAO->m_locomotion->getUpFront.play(false);
+            {
+                #if JWALK_STANDALONE
+                    getupfinishtime = getUpFront->play(false);
+                #else
+                    getupfinishtime = NAO->m_locomotion->getUpFront.play(false);
+                #endif
+            }
             else if (inBackwardBracePose())
-                getupfinishtime = NAO->m_locomotion->getUpBackFall.play(false);
+            {
+                #if JWALK_STANDALONE
+                    getupfinishtime = getUpBackFall->play(false);
+                #else
+                    getupfinishtime = NAO->m_locomotion->getUpBackFall.play(false);
+                #endif
+            }
             else if (fabs(balanceValues[B_ANGLE_X]) < 0.3 && fabs(balanceValues[B_ANGLE_Y]) < 0.3)
             {   // if torso is upright
                 if (touchLeftFootOnGround == true || touchRightFootOnGround == true)
@@ -624,6 +676,8 @@ void JWalk::getUp()
                         stiffnesses[i] = 0.8;
                     JWalkActuators->setStiffnessAll(stiffnesses);
                     getupfinishtime = JWalkActuators->goToAnglesNotHead(JWalkCommonPositions, 2000);
+                    setHeadYaw(0, 2000);
+                    setHeadPitch(0, 2000);
                 }
                 else
                 {
@@ -653,8 +707,10 @@ void JWalk::getUp()
         if (dcmTime > getupfinishtime)
         {
             thelog << "JWALK: getUp(): Finished at: " << dcmTimeSinceStart << endl;
-            float headstiffnesses[2] = {0.5, 0.5};
+            float headstiffnesses[2] = {0.25, 0.25};
             setHeadStiffness(headstiffnesses);
+            setHeadYaw(0, 100);
+            setHeadPitch(0, 100);
             JWalkActuators->setStiffnessNotHead(JWalkCommonHardnesses);
             balanceFallen = false;
             gettingupstate = 0;
@@ -726,6 +782,76 @@ int JWalk::doScript(script scripttorun, bool scripturgent)
         }
     }
     return scriptfinishtime;
+}
+
+void JWalk::enableFallingControl()
+{
+    balanceFallingEnabled = true;
+    return;
+}
+
+void JWalk::disableFallingControl()
+{
+    balanceFallingEnabled = false;
+    return;
+}
+
+void JWalk::checkAndRepair()
+{
+    if (checkHealth() == 3)
+    {
+        float stiffnesses[ALIAS_TARGETS_ALL_LENGTH];
+        system("aplay /home/root/SoundStates/chestnotfound.wav");
+        for (unsigned char i=0; i<ALIAS_TARGETS_ALL_LENGTH; i++)
+            stiffnesses[i] = 0.0;
+        usleep(100*(JWalkActuators->setStiffnessAll(stiffnesses, 100) - dcmTime));
+        system("ssh root@localhost /etc/init.d/naoqi restart");
+        std::exit(1);
+    }
+    else if (checkHealth() == 2)
+    {
+        float stiffnesses[ALIAS_TARGETS_ALL_LENGTH];
+        system("aplay /home/root/SoundStates/broken.wav");
+        for (unsigned char i=0; i<ALIAS_TARGETS_ALL_LENGTH; i++)
+            stiffnesses[i] = 0.0;
+        usleep(100*(JWalkActuators->setStiffnessAll(stiffnesses, 100) - dcmTime));
+        JWalkActuators->resetMotorBoards();
+        usleep(20*1e6);
+        system("ssh root@localhost /etc/init.d/naoqi restart");
+        std::exit(1);
+    }
+    else if (checkHealth() == 1)
+        system("aplay /home/root/SoundStates/warning.wav");
+    else
+        system("aplay /home/root/SoundStates/ok.wav");
+}
+
+int JWalk::checkHealth()
+{
+    static int previousChestNack = 0;
+    // From DCM Documentation: 97 to 111, 113 to 127, 209 to 211 are only warnings
+    bool warning = false;
+    thelog << "JWALK: checkHealth: Nack Chest:" << nackErrors[NK_CHEST] << " ";
+    
+    if (nackErrors[NK_CHEST] - previousChestNack > 50)
+    {
+        return 3;
+    }
+    for (unsigned char i=0; i<MB_NUM_BOARDS; i++)
+    {
+        thelog << boardErrors[i] << ", ";
+        if (boardErrors[i] != 0)
+        {
+            if ((boardErrors[i] >= 97 && boardErrors[i] <= 111) || (boardErrors[i] >= 113 && boardErrors[i] <= 127) || (boardErrors[i] >= 209 && boardErrors[i] <= 211))
+                warning = true;
+            else
+                return 2;
+        }
+    }
+    if (warning == false)
+        return 0;
+    else
+        return 1;
 }
 
 /********************************************************************************************************************************************************************
@@ -1485,31 +1611,24 @@ void JWalk::alWalkStop()
     alWalk->stop();
 }
 
-/*!
- * dummy Function
- * @param pNawak the function will return this parameter
- */
-/*void JWalk::setStiffness(const ALValue& stiffness)
-{
-}*/
 
 /*! Returns the module's version
  This method is inherited from ALModule, and must be implemented
  */
-/*string JWalk::version()
+string JWalk::version()
 {
-    return ALTOOLS_VERSION(JASON);
-}*/
+    return "lolwut";
+}
 
 /*! Returns the true if the test succeeds, false if it fails
  This method is inherited from ALModule, and must be implemented
  */
-/*bool JWalk::innerTest() 
+bool JWalk::innerTest() 
 {
   bool result = true;
   // put here code dedicaced to autotest this module.
   // return false if fail, success otherwise
   return result;
-}*/
+}
 
 
