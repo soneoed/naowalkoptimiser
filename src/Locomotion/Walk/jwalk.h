@@ -24,6 +24,7 @@ namespace AL
 #define JWALK_VERBOSITY         3
 #define JWALK_STANDALONE        1               // set this to 1, to make JWalk a standalone AL::ALModule
 #define JWALK_OPTIMISER         1
+#define JWALK_ALMOTION          0
 
 #define JWalk_VERSION_MAJOR     "0"
 #define JWalk_VERSION_MINOR     "0"
@@ -60,14 +61,16 @@ namespace AL
         void braceForImpact();
         void getUp();
         int doScript(script scripttorun, bool scripturgent);
+        void enableFallingControl();
+        void disableFallingControl();
+        void checkAndRepair();
+        int checkHealth();
 
         // 'Omni-directional' walk interface
         void nuWalkOnBearing(float bearing, unsigned char speed, bool dodge=false);
         void nuWalkToPoint(float distance, float bearing, bool dodge=false);
         void nuWalkToPointWithOrientation(float distance, float bearing, float finalorientation, bool dodge=false);
         void nuWalkToPointWithMaintainOrientation(float distance, float bearing, float desiredorientation, bool dodge=false);
-    
-        
     
         bool nuWalkIsActive();
         void nuWalkStop();
@@ -124,6 +127,9 @@ namespace AL
         void onDCMPostProcess();
         
         void changeModes(JWalkModeEnum nextmode);
+#if JWALK_STANDALONE        // as a temporary patch for the poor organisation of locomotion and jwalk, I am adding the getup scripts to jwalk itself
+        script *getUpBack, *getUpFront, *getUpBackFall;
+#endif
 };
 
 #endif
