@@ -26,6 +26,7 @@ extern string classToClassName[];
 //                  For arcs it is the radius LeftXXX in cm. For turns it is the turn angle RightX.X in radians
 //              Left/Right is whether the step is a Left or Right step
 //              CLASS is the class of step eg. Start, Follow, FStop, NStop
+#define TYPE_NONE_NAME              string("NoStep")
 #define TYPE_FORWARD_NAME           string("WalkForward")
 #define TYPE_ARC_NAME               string("WalkArc")
 #define TYPE_DIAGONAL_NAME          string("WalkDiagonal")
@@ -58,6 +59,7 @@ enum StepClassEnum
 
 enum StepTypeEnum 
 {
+    TYPE_NONE,      // that is don't take a step
     TYPE_FORWARD,
     TYPE_ARC,
     //TYPE_DIAGONAL,
