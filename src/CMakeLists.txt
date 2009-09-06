@@ -38,8 +38,12 @@ SET(WALKOPTIMISER_SRCS
 #<FILES> don't remove this comment
 Locomotion/Walk/jwalk.cpp Locomotion/Walk/jwalk.h
 
+Globals.h Globals.cpp
+Parse.h Parse.cpp
+
+jwalkoptimiser.h jwalkoptimiser.cpp
+
 # Locomotion Directory
-    Locomotion/Locomotion.cpp Locomotion/Locomotion.h
     Locomotion/script.cpp Locomotion/script.h
 
 # Locomotion/Walk Directory
@@ -56,7 +60,11 @@ Locomotion/Walk/jwalk.cpp Locomotion/Walk/jwalk.h
     Network/Network.cpp Network/Network.h
     Network/UdpPort.cpp Network/UdpPort.h
     Network/thread.cpp  Network/thread.h
-    Network/GameController.cpp Network/GameController.h
+
+# Kinematics Directory
+   Kinematics/Kinematics.h Kinematics/Kinematics.cpp
+   Kinematics/KinematicTools.h Kinematics/KinematicTools.cpp
+   Kinematics/Matrix.h Kinematics/Matrix.cpp
 
 #</FILES> don't remove this comment
 
