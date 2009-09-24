@@ -7,6 +7,8 @@
  *
  */
 
+#define NUWALK_VERBOSITY       0
+
 #include "nuwalk.h"
 #include "walkprimitive.h"
 #include "jwalk.h"
@@ -185,6 +187,7 @@ void NUWalk::doWalk()
         {
             #if NUWALK_VERBOSITY > 2
                 thelog << "NUWALK: doWalk(). CurrentStep: " << CurrentStep->Name << endl;
+                thelog << "NUWALK: leftSupportMode:" << indexToSupportMode[leftSupportMode] << " rightSupportMode:" << indexToSupportMode[rightSupportMode] << endl;
             #endif
             CurrentStep->getNextFrame(&CurrentPositions, &CurrentHardnesses);
             actuators->sendFrameToNotHead(CurrentPositions, CurrentHardnesses);
@@ -1831,7 +1834,7 @@ void NUWalk::selectNextStep(action_t nextaction)
         stop();
         doStopStep();
     }
-    else if (CurrentStep == NULL || PreviousStep == NULL || PreviousStep->StepClass == CLASS_FSTOP || PreviousStep->StepClass == CLASS_NSTOP)
+    else if (CurrentStep == NULL || PreviousStep == NULL || PreviousStep->StepClass == CLASS_FSTOP || PreviousStep->StepClass == CLASS_NSTOP || CurrentStep->StepType == TYPE_NONE || PreviousStep->StepType == TYPE_NONE)
         selectStartStep(nextaction);
     else
     {
