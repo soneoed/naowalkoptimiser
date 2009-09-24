@@ -5,13 +5,14 @@
  */
 
 #include "jwalkoptimiser.h"
+#include "optimiser.h"
 #include "Locomotion/Walk/jwalk.h"
 #include "Locomotion/Walk/sensors.h"
 #include "Locomotion/Walk/actuators.h"
 
 #include "Network/Network.h"
 
-float networkControl1, networkControl2, networkControl3;
+float networkVelocityX, networkVelocityY, networkVelocity, networkControl1, networkControl2, networkControl3;
 
 
 void* runJWalkOptimiser(void *arg)
@@ -23,13 +24,18 @@ void* runJWalkOptimiser(void *arg)
 
     Sensors* sensors = jwalk->JWalkSensors;
     Actuators* actuators = jwalk->JWalkActuators;
+    Optimiser* optimiser = new Optimiser();
     Network* network = new Network();
+    networkVelocityX = 0;
+    networkVelocityY = 0;
+    networkVelocity = 0;
     networkControl1 = 0;    // distance
     networkControl2 = 0;    // bearing
     networkControl3 = 0;    // orientation
     
     jwalk->initWalk();
     
+    static int lowbatterycount = 0;
     struct timespec nextRunTime;                    // The absolute time for the main thread to be executed
     clock_gettime(CLOCK_REALTIME, &nextRunTime);    // Initialise the next run time to be now
     
@@ -38,6 +44,19 @@ void* runJWalkOptimiser(void *arg)
     {
         clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &nextRunTime, NULL);
         network->ProcessUpdates();
+        
+        if (batteryValues[E_CHARGE] < 0.1)
+            lowbatterycount++;
+        else
+            lowbatterycount = 0;
+        
+        if (lowbatterycount > 30)
+        {
+            jwalk->disableFallingControl();
+            jwalk->stop();
+            system("aplay /home/root/SoundStates/battery.wav");
+            usleep(2*1e6);
+        }
         
         if (networkControl1 != -1000 || networkControl2 != -1000 || networkControl3 != -1000)
         {   // all network controls are set to -1000 when there is no connection;
@@ -55,8 +74,8 @@ void* runJWalkOptimiser(void *arg)
             jwalk->stop();
         }
         
-        sensors->calculateOdometry();
-        network->SendUpdate();
+        optimiser->doOptimisation(jwalk->nuWalk->CurrentStep, networkVelocity);
+        
         // calculation of next run time
         nextRunTime.tv_nsec += 1e9/JWALKOPTIMISER_FREQUENCY;
         if (nextRunTime.tv_nsec > 1e9)              // we need to be careful with the nanosecond clock overflowing...
