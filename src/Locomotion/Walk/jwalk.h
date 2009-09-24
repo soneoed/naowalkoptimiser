@@ -21,7 +21,6 @@ namespace AL
     class ALBroker;
 }
 
-#define JWALK_VERBOSITY         3
 #define JWALK_STANDALONE        1               // set this to 1, to make JWalk a standalone AL::ALModule
 #define JWALK_OPTIMISER         1
 #define JWALK_ALMOTION          0
