@@ -12,6 +12,7 @@
 
 #include "jwalkincludes.h"
 #include "step.h"
+#include "pidcontroller.h"
 
 class Actuators;
 class JWalk;
@@ -36,8 +37,6 @@ enum GWalkDirectionEnum
     GWALK_DIRECTION_TURN_RIGHT,
     GWALK_NUM_DIRECTIONS
 };
-
-#define NUWALK_VERBOSITY       2
 
 class NUWalk
 {
@@ -129,13 +128,13 @@ class NUWalk
     public:
         float* DefaultPositions;
         float* DefaultHardnesses;
+        Step* CurrentStep;
+        Step* PreviousStep;
     private:
         JWalk* jwalk;
         Actuators* actuators;
     
         WalkPrimitive* Primitives[TYPE_NUM_TYPES];
-        Step* CurrentStep;
-        Step* PreviousStep;
     
         float WalkR;
         float WalkBearing;

@@ -10,8 +10,6 @@
 #ifndef WALKPRIMITIVE_H
 #define WALKPRIMITIVE_H
 
-#define WALKPRIMITIVE_VERBOSITY         3
-
 #include "step.h"
 #include "nuwalk.h"
 

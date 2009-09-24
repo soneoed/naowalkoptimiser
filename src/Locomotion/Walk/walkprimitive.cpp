@@ -7,6 +7,8 @@
  *
  */
 
+#define WALKPRIMITIVE_VERBOSITY         0
+
 #include "walkprimitive.h"
 
 #define NUM_FORWARD_PRIMITIVES          1
