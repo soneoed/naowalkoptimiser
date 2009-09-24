@@ -42,6 +42,7 @@ Globals.h Globals.cpp
 Parse.h Parse.cpp
 
 jwalkoptimiser.h jwalkoptimiser.cpp
+optimiser.h optimiser.cpp
 
 # Locomotion Directory
     Locomotion/script.cpp Locomotion/script.h
@@ -55,6 +56,7 @@ jwalkoptimiser.h jwalkoptimiser.cpp
     Locomotion/Walk/jwalkthread.cpp Locomotion/Walk/jwalkthread.h
     Locomotion/Walk/sensors.cpp Locomotion/Walk/sensors.h
     Locomotion/Walk/actuators.cpp Locomotion/Walk/actuators.h
+    Locomotion/Walk/pidcontroller.cpp Locomotion/Walk/pidcontroller.h
 
 # Network Directory
     Network/Network.cpp Network/Network.h
