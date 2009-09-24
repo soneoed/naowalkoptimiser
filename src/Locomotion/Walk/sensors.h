@@ -327,18 +327,31 @@ enum{
     T_NUM_SENSORS
 };
 
-// FSR sensors:
+// Foot Pressure sensors:
 enum{
-    FSR_L_FSR_FL,
-    FSR_L_FSR_FR,
-    FSR_L_FSR_BL,
-    FSR_L_FSR_BR,
-    FSR_R_FSR_FL,
-    FSR_R_FSR_FR,
-    FSR_R_FSR_BL,
-    FSR_R_FSR_BR,
-    FSR_NUM_SENSORS
-}
+    PS_L_FL,
+    PS_L_FR,
+    PS_L_BL,
+    PS_L_BR,
+    PS_L,           // the total force (N) on the left foot
+    PS_R_FL,
+    PS_R_FR,
+    PS_R_BL,
+    PS_R_BR,
+    PS_R,           // the total force (N) on the right foot
+    PS_NUM_SENSORS
+};
+
+// Support Mode:
+enum SupportModeEnum
+{
+    SM_STANCE,
+    SM_PUSH,
+    SM_SWING,
+    SM_IMPACT,
+    SM_NUM_MODES
+};
+extern string indexToSupportMode[SM_NUM_MODES];
 
 // Energy sensors: battery
 enum{
@@ -409,6 +422,7 @@ extern bool balanceFallingLeft;
 extern bool balanceFallingRight;
 extern bool balanceFallen;                  // the robot has finished falling, and is now fallen (you can start getting up now)
 extern bool balancePreviousFallen;
+extern int balanceFallenCount;              // the number of times since boot (or other event) I have fallen over
 
 // Touch Feedback Data. Foot Pressure sensors, foot bump sensors, and chest buttons
 extern float touchValues[T_NUM_SENSORS];
@@ -416,11 +430,13 @@ extern float touchLeftCoPX;
 extern float touchLeftCoPY;
 extern float touchRightCoPX;
 extern float touchRightCoPY;
-extern float touchFSRValues[FSR_NUM_SENSORS];
+extern float touchPSValues[PS_NUM_SENSORS];
 extern bool touchOnGround;
 extern bool touchPreviousOnGround;
 extern bool touchLeftFootOnGround;
 extern bool touchRightFootOnGround;
+extern SupportModeEnum leftSupportMode;
+extern SupportModeEnum rightSupportMode;
 
 extern bool collisionAny;
 extern bool collisionLeftArm;
@@ -465,6 +481,7 @@ class Sensors
     void createLogs();
     void finishLogs();
     
+    void calibrateFootForceSensors();
     void calculateOdometry();
     
     static void sendUSCommandToDCM(float value);
@@ -485,8 +502,10 @@ class Sensors
     void filterJointVelocities();
     
     void calculateSoftSensors();
+    void calculateStiffnessCorrectionFactor();
     void calculateFootForceReadings();
     void calculateCoP();
+    void determineSupportMode();
     void determineWhetherOnGround();
     void determineWhetherWalking();
     void determineWhetherFalling();

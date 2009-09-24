@@ -56,6 +56,7 @@ bool balanceFallingLeft;
 bool balanceFallingRight;
 bool balanceFallen;
 bool balancePreviousFallen;
+int balanceFallenCount;
 
 // Touch Feedback Data. Foot Pressure sensors, foot bump sensors, and chest buttons
 float touchValues[T_NUM_SENSORS];
@@ -63,11 +64,14 @@ float touchLeftCoPX;
 float touchLeftCoPY;
 float touchRightCoPX;
 float touchRightCoPY;
-float touchFSRValues[FSR_NUM_SENSORS];
+float touchPSValues[PS_NUM_SENSORS];
 bool touchOnGround;
 bool touchPreviousOnGround;
 bool touchLeftFootOnGround;
 bool touchRightFootOnGround;
+SupportModeEnum leftSupportMode;
+SupportModeEnum rightSupportMode;
+string indexToSupportMode[SM_NUM_MODES] = {string("Stance"), string("Push"), string("Swing"), string("Impact")};
 
 // Collision Feedback
 bool collisionAny;
@@ -168,11 +172,14 @@ Sensors::Sensors(AL::ALPtr<AL::ALBroker> pBroker)
     balanceFallingRight = false;
     balanceFallen = false;
     balancePreviousFallen = false;
+    balanceFallenCount = 0;
     
     touchOnGround = false;
     touchPreviousOnGround = false;
     touchLeftFootOnGround = false;
     touchRightFootOnGround = false;
+    leftSupportMode = SM_STANCE;
+    rightSupportMode = SM_STANCE;
     
     collisionAny = false;
     collisionLeftArm = false;
@@ -562,8 +569,10 @@ void Sensors::calculateSoftSensors()
     alStm->insertData("Jason/Misc/jointCurrentSum", jointCurrentSum, 0);    
 #endif
     
+    calculateStiffnessCorrectionFactor();
     calculateFootForceReadings();
     calculateCoP();
+    determineSupportMode();
     determineWhetherOnGround();
     determineWhetherWalking();
     determineWhetherFalling();
@@ -688,34 +697,69 @@ void Sensors::calculateOdometry()
     return;
 }
 
+/* Calibrates the foot force sensors
+ Preconditions: The robot must be standing still
+ */
+void Sensors::calibrateFootForceSensors()
+{
+    return;
+}
+
+/* 
+ */
+void Sensors::calculateStiffnessCorrectionFactor()
+{
+    static float electricCurrentSum = 0;
+    static int electricCurrentCount = 0;
+    static const float nominalElectricCurrentSum = 23.544;           // the expected long term average of the force under a single foot (Newtons)
+    
+    electricCurrentSum += jointCurrentSum;
+    electricCurrentCount++;
+    
+    if (electricCurrentCount > 800)
+    {   // if the count is getting big; fudge the average so that the count doesn't over flow
+        electricCurrentSum = (electricCurrentSum/electricCurrentCount)*400;
+        electricCurrentCount = 400;
+    }
+    
+#if SENSOR_EXPORT_TO_AL
+    alStm->insertData("Jason/Misc/averageCurrent", (electricCurrentSum/electricCurrentCount), 0);
+#endif
+}
+
 /* Calculate the centre of pressure (ZMP) under each foot
  Postconditions: touchLeftCoPX, touchLeftCoPY, touchRightCoPX, touchRightCoPY are set to the calculated values in centimetres
  */
 void Sensors::calculateFootForceReadings()
 {
-    // TO DO: I need to convert the sensor readings into newtons
-    static const float m = 8900;                // values determined by experiment
+    static const float m = 8900;                // values determined by experiment for conversion from alderbaran's readings to Newtons
     static const float b = -1.77;
-    touchFSRValues[FSR_L_FSR_FL] = (1.0/touchValues[T_L_FSR_FL])*m + b;
-    touchFSRValues[FSR_L_FSR_FR] = (1.0/touchValues[T_L_FSR_FR])*m + b
-    touchFSRValues[FSR_L_FSR_BL] = (1.0/touchValues[T_L_FSR_BL])*m + b
-    touchFSRValues[FSR_L_FSR_BR] = (1.0/touchValues[T_L_FSR_BR])*m + b
     
-    touchFSRValues[FSR_R_FSR_FL] = (1.0/touchValues[T_R_FSR_FL])*m + b
-    touchFSRValues[FSR_R_FSR_FR] = (1.0/touchValues[T_R_FSR_FR])*m + b
-    touchFSRValues[FSR_R_FSR_BL] = (1.0/touchValues[T_R_FSR_BL])*m + b
-    touchFSRValues[FSR_R_FSR_BR] = (1.0/touchValues[T_R_FSR_BR])*m + b
+    touchPSValues[PS_L_FL] = (1.0/touchValues[T_L_FSR_FL])*m + b;
+    touchPSValues[PS_L_FR] = (1.0/touchValues[T_L_FSR_FR])*m + b;
+    touchPSValues[PS_L_BL] = (1.0/touchValues[T_L_FSR_BL])*m + b;
+    touchPSValues[PS_L_BR] = (1.0/touchValues[T_L_FSR_BR])*m + b;
     
+    touchPSValues[PS_L] = touchPSValues[PS_L_FL] + touchPSValues[PS_L_FR] + touchPSValues[PS_L_BL] + touchPSValues[PS_L_BR];
+    
+    touchPSValues[PS_R_FL] = (1.0/touchValues[T_R_FSR_FL])*m + b;
+    touchPSValues[PS_R_FR] = (1.0/touchValues[T_R_FSR_FR])*m + b;
+    touchPSValues[PS_R_BL] = (1.0/touchValues[T_R_FSR_BL])*m + b;
+    touchPSValues[PS_R_BR] = (1.0/touchValues[T_R_FSR_BR])*m + b;
+    touchPSValues[PS_R] = touchPSValues[PS_R_FL] + touchPSValues[PS_R_FR] + touchPSValues[PS_R_BL] + touchPSValues[PS_R_BR];
+
 #if SENSOR_EXPORT_TO_AL
-    alStm->insertData("Jason/Touch/touchLeftFSRFL", touchFSRValues[FSR_L_FSR_FL], 0);
-    alStm->insertData("Jason/Touch/touchLeftFSRFR", touchFSRValues[FSR_L_FSR_FR], 0);    
-    alStm->insertData("Jason/Touch/touchLeftFSRBL", touchFSRValues[FSR_L_FSR_BL], 0);
-    alStm->insertData("Jason/Touch/touchLeftFSRBR", touchFSRValues[FSR_L_FSR_BR], 0);
+    alStm->insertData("Jason/Touch/touchLeftPS_FL", touchPSValues[PS_L_FL], 0);
+    alStm->insertData("Jason/Touch/touchLeftPS_FR", touchPSValues[PS_L_FR], 0);    
+    alStm->insertData("Jason/Touch/touchLeftPS_BL", touchPSValues[PS_L_BL], 0);
+    alStm->insertData("Jason/Touch/touchLeftPS_BR", touchPSValues[PS_L_BR], 0);
+    alStm->insertData("Jason/Touch/touchLeftPS_L", touchPSValues[PS_L], 0);
     
-    alStm->insertData("Jason/Touch/touchRightFSRFL", touchFSRValues[FSR_R_FSR_FL], 0);
-    alStm->insertData("Jason/Touch/touchRightFSRFR", touchFSRValues[FSR_R_FSR_FR], 0);    
-    alStm->insertData("Jason/Touch/touchRightFSRBL", touchFSRValues[FSR_R_FSR_BL], 0);
-    alStm->insertData("Jason/Touch/touchRightFSRBR", touchFSRValues[FSR_R_FSR_BR], 0);
+    alStm->insertData("Jason/Touch/touchRightPS_FL", touchPSValues[PS_R_FL], 0);
+    alStm->insertData("Jason/Touch/touchRightPS_FR", touchPSValues[PS_R_FR], 0);    
+    alStm->insertData("Jason/Touch/touchRightPS_BL", touchPSValues[PS_R_BL], 0);
+    alStm->insertData("Jason/Touch/touchRightPS_BR", touchPSValues[PS_R_BR], 0);
+    alStm->insertData("Jason/Touch/touchRightPS_R", touchPSValues[PS_R], 0);
 #endif
 }
 
@@ -724,28 +768,164 @@ void Sensors::calculateFootForceReadings()
  */
 void Sensors::calculateCoP()
 {
-    float lfl, lfr, lbl, lbr, rfl, rfr, rbl, rbr;
-    lfl = touchFSRValues[FSR_L_FSR_FL];
-    lfr = touchFSRValues[FSR_L_FSR_FR]; 
-    lbl = touchFSRValues[FSR_L_FSR_BL]; 
-    lbr = touchFSRValues[FSR_L_FSR_BR];
+    touchLeftCoPX = (7.10*touchPSValues[PS_L_FL] + 7.10*touchPSValues[PS_L_FR] - 3.04*touchPSValues[PS_L_BL] - 2.98*touchPSValues[PS_L_BR])/touchPSValues[PS_L];
+    touchLeftCoPY = (3.00*touchPSValues[PS_L_FL] - 2.30*touchPSValues[PS_L_FR] + 3.00*touchPSValues[PS_L_BL] - 1.90*touchPSValues[PS_L_BR])/touchPSValues[PS_L];
 
-    rfl = touchFSRValues[FSR_R_FSR_FL];
-    rfr = touchFSRValues[FSR_R_FSR_FR];
-    rbl = touchFSRValues[FSR_R_FSR_BL];
-    rbr = touchFSRValues[FSR_R_FSR_BR];
-
-    touchLeftCoPX = (7.10*lfl + 7.10*lfr - 3.04*lbl - 2.98*lbr)/(lfl + lfr + lbl + lbr);
-    touchLeftCoPY = (3.00*lfl - 2.30*lfr + 3.00*lbl - 1.90*lbr)/(lfl + lfr + lbl + lbr);
-
-    touchRightCoPX = (7.10*rfl + 7.10*rfr - 3.04*rbl - 2.98*rbr)/(rfl + rfr + rbl + rbr);
-    touchRightCoPY = (2.30*rfl - 3.00*rfr + 1.90*rbl - 3.00*rbr)/(rfl + rfr + rbl + rbr);
+    touchRightCoPX = (7.10*touchPSValues[PS_R_FL] + 7.10*touchPSValues[PS_R_FR] - 3.04*touchPSValues[PS_R_BL] - 2.98*touchPSValues[PS_R_BR])/touchPSValues[PS_R];
+    touchRightCoPY = (2.30*touchPSValues[PS_R_FL] - 3.00*touchPSValues[PS_R_FR] + 1.90*touchPSValues[PS_R_BL] - 3.00*touchPSValues[PS_R_BR])/touchPSValues[PS_R];
    
 #if SENSOR_EXPORT_TO_AL
    alStm->insertData("Jason/Touch/touchLeftCoPX", touchLeftCoPX, 0);
    alStm->insertData("Jason/Touch/touchLeftCoPY", touchLeftCoPY, 0);    
    alStm->insertData("Jason/Touch/touchRightCoPX", touchRightCoPX, 0);
    alStm->insertData("Jason/Touch/touchRightCoPY", touchRightCoPY, 0);
+#endif
+}
+/* Determines the support mode while walking.
+ Each foot can have the following support modes:
+    1. stance: The foot is on the ground
+    2. push: transistioning from stance to swing
+    3. swing: this foot is not supporting the weight of the robot
+    4. impact: transistioning from swing back to stance.
+ */
+void Sensors::determineSupportMode()
+{
+// It is easier to write logic to determine the support mode with filtered weights. 
+    // I filtered the left and right feet forces, as well as keeping a long term average for calibration purposes
+    static const unsigned char historylength = 10;
+    static int historyindex = 0;
+    static float historyLeftValues[historylength];
+    static float historyRightValues[historylength];
+    
+    // I also want to have this self calibrating so I am going to keep the average of the left and right forces, so that I can scale them.
+    float leftAverageForce = 0;
+    float rightAverageForce = 0;
+    static float leftSumForce = 0;
+    static float rightSumForce = 0;
+    static int averageCount = 0;
+    static const float nominalforce = 23.544;           // the expected long term average of the force under a single foot (Newtons)
+    
+    historyLeftValues[historyindex] = touchPSValues[PS_L];
+    historyRightValues[historyindex] = touchPSValues[PS_R];
+
+    float leftForce = 0;                // filtered version of the total force on the left foot (N).
+    float rightForce = 0;               // filtered version of the total force on the right foot (N).
+    for (unsigned char i=0; i<historylength; i++)
+    {
+        leftForce += historyLeftValues[i];
+        rightForce += historyRightValues[i]; 
+    }
+    leftForce /= historylength;
+    rightForce /= historylength;
+    historyindex = (historyindex + 1)%historylength;
+    
+    leftSumForce += leftForce;
+    rightSumForce += rightForce;
+    averageCount++;
+    leftAverageForce = leftSumForce/averageCount;
+    rightAverageForce = rightSumForce/averageCount;
+    
+    if (averageCount > 800)
+    {   // if the count is getting big; fudge the average so that the count doesn't over flow
+        averageCount = 400;
+        leftSumForce = leftAverageForce*averageCount;
+        rightSumForce = rightAverageForce*averageCount;
+    }
+    leftForce *= (nominalforce/leftAverageForce);               // use the long term average to calibrate the forces
+    rightForce *= (nominalforce/rightAverageForce);
+    
+// OK. The logic starts done here.
+    
+    float percentLeftFoot = 100*leftForce/(leftForce + rightForce);
+    float percentRightFoot = 100*rightForce/(leftForce + rightForce);
+    
+    if (walkAmIWalking == true)
+    {   // if I am walking then determine what support mode I am in, based on the previous support mode and sensor feedback
+        
+        if (leftSupportMode == SM_STANCE && rightSupportMode == SM_STANCE)
+        {   // if I am in double support mode and stopped
+            if (percentLeftFoot < 40)
+                leftSupportMode = SM_PUSH;
+            else if (percentRightFoot < 40)
+                rightSupportMode = SM_PUSH;
+        }
+        else
+        {
+            // do the logic for the left foot
+            if (leftSupportMode == SM_STANCE)
+            {   // We can transistion to SM_PUSH. This happens when:
+                // The weight begins to be transfered to the other foot and the other foot is in SM_STANCE or SM_IMPACT
+                if (rightSupportMode == SM_STANCE || rightSupportMode == SM_IMPACT)
+                    if (percentLeftFoot < 47)
+                        leftSupportMode = SM_PUSH;
+            }
+            else if (leftSupportMode == SM_PUSH)
+            {   // We can transition to SM_SWING. This happens when:
+                // The weight on this foot is very low, and the other foot is in SM_STANCE
+                if (rightSupportMode == SM_STANCE)
+                    if (percentLeftFoot < 36)
+                        leftSupportMode = SM_SWING;
+            }
+            else if (leftSupportMode == SM_SWING)
+            {   // We can transition to SM_IMPACT. This happens where:
+                // The weight comes back to this foot, and the other foot is in SM_STANCE
+                if (rightSupportMode == SM_STANCE)
+                    if (percentLeftFoot > 36)
+                        leftSupportMode = SM_IMPACT;
+            }
+            else if (leftSupportMode == SM_IMPACT)
+            {   // We can transition to SM_STANCE. This happens when:
+                // The weight is more on this foot
+                if (percentLeftFoot > 47)
+                    leftSupportMode = SM_STANCE;
+            }
+            
+            // do the logic for the right foot
+            if (rightSupportMode == SM_STANCE)
+            {   // We can transistion to SM_PUSH. This happens when:
+                // The weight begins to be transfered to the other foot and the other foot is in SM_STANCE or SM_IMPACT
+                if (leftSupportMode == SM_STANCE || leftSupportMode == SM_IMPACT)
+                    if (percentRightFoot < 47)
+                        rightSupportMode = SM_PUSH;
+            }
+            else if (rightSupportMode == SM_PUSH)
+            {   // We can transition to SM_SWING. This happens when:
+                // The weight on this foot is very low, and the other foot is in SM_STANCE
+                if (leftSupportMode == SM_STANCE)
+                    if (percentRightFoot < 36)
+                        rightSupportMode = SM_SWING;
+            }
+            else if (rightSupportMode == SM_SWING)
+            {   // We can transition to SM_IMPACT. This happens where:
+                // The weight comes back to this foot, and the other foot is in SM_STANCE
+                if (leftSupportMode == SM_STANCE)
+                    if (percentRightFoot > 36)
+                        rightSupportMode = SM_IMPACT;
+            }
+            else if (rightSupportMode == SM_IMPACT)
+            {   // We can transition to SM_STANCE. This happens when:
+                // The weight is more on this foot
+                if (percentRightFoot > 47)
+                    rightSupportMode = SM_STANCE;
+            }
+        }
+            
+    }
+    else
+    {
+        leftSupportMode = SM_STANCE;
+        rightSupportMode = SM_STANCE;
+    }
+    
+    
+#if SENSOR_EXPORT_TO_AL
+    alStm->insertData("Jason/Support/leftForce", leftForce, 0);
+    alStm->insertData("Jason/Support/rightForce", rightForce, 0);    
+    alStm->insertData("Jason/Support/leftPercent", percentLeftFoot, 0);
+    alStm->insertData("Jason/Support/rightPercent", percentRightFoot, 0);
+
+    alStm->insertData("Jason/Support/leftMode", (int)leftSupportMode, 0);
+    alStm->insertData("Jason/Support/rightMode", (int)rightSupportMode, 0);
 #endif
 }
 
@@ -888,8 +1068,8 @@ void Sensors::determineWhetherFalling()
                 balanceFallen = true;
                 fallencount = 0;
             }
-            else if (fallingcount > 30)
-            {   // if it has been 0.6s since the robot started falling over, then assume we have now fallen to the ground
+            else if (fallingcount > 40)
+            {   // if it has been 0.8s since the robot started falling over, then assume we have now fallen to the ground
                 balanceFallen = true;
                 fallencount = 0;
                 fallingcount = 0;
@@ -903,13 +1083,16 @@ void Sensors::determineWhetherFalling()
             balanceFallingLeft = false;
             balanceFallingRight = false;
             
+            if (balancePreviousFallen == false)
+                balanceFallenCount++;
+            
             fallingcount = 0;
         }
         else            
         {   // If we haven't fallen, we could be falling; determine whether we are falling, and in what direction(s)
             if (touchOnGround && fallencount == 0)
             {
-                if (balanceValues[B_ANGLE_Y] < -0.45)        // we are falling backwards
+                if (balanceValues[B_ANGLE_Y] < -0.50)        // we are falling backwards
                     balanceFallingBackward = true;
                 
                 if (balanceValues[B_ANGLE_Y] > 0.50)    // we are falling forwards
