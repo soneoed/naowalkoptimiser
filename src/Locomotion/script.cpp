@@ -1,6 +1,9 @@
 #include "script.h"
 #include "Walk/jwalk.h"
 
+
+#define SCRIPT_USE_HEAD         0
+
 using namespace std;
 
 static inline bool cropJunk(std::string &input)
@@ -213,7 +216,7 @@ int script::play(bool block)
     
     instruction[2] = commands;
     alDcm->callVoid("set", instruction);
-    thelog << "script: " << m_fileName << " play() " << instruction.toString(AL::VerbosityMini) << endl;
+    //thelog << "script: " << m_fileName << " play() " << instruction.toString(AL::VerbosityMini) << endl;
     
   }
   if(block) usleep( 1000*getRunningTime() );
@@ -243,6 +246,11 @@ bool script::setStiffness(float newStiffness)
     commands.clear();
 
     timeCommand[0] = newStiffness;
+#if SCRIPT_USE_HEAD == 0
+    #warning Script is not using the head. Make sure the head is broken
+    if (m_jointNames[jointID] == std::string("HeadYaw") || m_jointNames[jointID] == std::string("HeadPitch"))
+      timeCommand[0] = 0;
+#endif
     timeCommand[1] = currTime;
     commands.arrayPush(timeCommand);
     instruction[2] = commands;
