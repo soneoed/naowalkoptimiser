@@ -69,6 +69,17 @@ enum StepTypeEnum
     TYPE_NUM_TYPES
 };
 
+enum StepSupportHardnessEnum
+{
+    SH_HIP_YAW,
+    SH_HIP_ROLL,
+    SH_HIP_PITCH,
+    SH_KNEE_PITCH,
+    SH_ANKLE_PITCH,
+    SH_ANKLE_ROLL,
+    SH_NUM_JOINTS
+};
+
 class Step
 {
     public:
@@ -83,13 +94,18 @@ class Step
         void setStepProperties();
         void resetStep();
         void loadStep();                                    // load step and pose
+        void loadSupportHardnesses();
+        void useSupportHardnesses(float hardnesses[]);
         void readCSV(ifstream& file, float data[STEP_MAX_LENGTH][ALIAS_TARGETS_NOT_HEAD_LENGTH]);       // read step file
         void readCSV(ifstream& file, float data[ALIAS_TARGETS_NOT_HEAD_LENGTH]);                        // read pose file
     
     public:
         string Name;                        // the step's name (this will be used by higher levels to plan and connect steps together)
+        float StepOriginalPositions[STEP_MAX_LENGTH][ALIAS_TARGETS_NOT_HEAD_LENGTH];
         float StepPositions[STEP_MAX_LENGTH][ALIAS_TARGETS_NOT_HEAD_LENGTH];
-        float StepHardnesses[STEP_MAX_LENGTH][ALIAS_HARDNESS_NOT_HEAD_LENGTH];
+        float StepOriginalHardnesses[STEP_MAX_LENGTH][ALIAS_HARDNESS_NOT_HEAD_LENGTH];
+        float StepHardnesses[STEP_MAX_LENGTH][ALIAS_TARGETS_NOT_HEAD_LENGTH];
+        float StepSupportHardnesses[SM_NUM_MODES][SH_NUM_JOINTS];
         unsigned char StepLength;           // the step length in dcm cycles
         
         float StepDirection;                // the direction of the step (this is obtained from the 'Value' field in the filename, and has different meanings depending on the Type
@@ -101,6 +117,10 @@ class Step
     
     private:
         unsigned char StepCurrentIndex;     // the current index into StepPositions and StepHardnesses
+        unsigned char StepWaitCount;        // the number of dcm cycles I have been waiting past the usual step end time
+        int StepLastCallTime;
+        unsigned char StepSwingCount;       // the number of consecutive swing support modes
+        unsigned char StepPushCount;        // the number of consecutive push support modes
         
         float StepInitialPose[ALIAS_TARGETS_NOT_HEAD_LENGTH];
 };
