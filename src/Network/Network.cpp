@@ -2,6 +2,8 @@
 #include <sstream>
 #include "Network.h"
 
+#define NETWORK_VERBOSITY   0
+
 Network::Network()
 {
     thelog << "---------Network Module Initialisation---------"<< endl;
@@ -51,14 +53,19 @@ void Network::CheckWalkPacket()
             else
                 pos++;
         }
-        thelog << "NETWORK: CheckWalkPacket" << endl;
-        for (unsigned char i=0; i<numvalues; i++)
-            thelog << values[i] << ", ";
-        thelog << endl;
+        #if NETWORK_VERBOSITY > 0
+            thelog << "NETWORK: CheckWalkPacket" << endl;
+            for (unsigned char i=0; i<numvalues; i++)
+                thelog << values[i] << ", ";
+            thelog << endl;
+        #endif
         
         if (numvalues == 6)
         {
             callssincereceived = 0;
+            networkVelocityX = values[0];
+            networkVelocityY = values[1];
+            networkVelocity = values[2];
             networkControl1 = values[3];
             networkControl2 = values[4];
             networkControl3 = values[5];
@@ -70,9 +77,11 @@ void Network::CheckWalkPacket()
         callssincereceived++;
     
     // Deadman handle; if the connection is lost stop the robot
-    if (callssincereceived > 5)
+    if (callssincereceived > 10)
     {
-        thelog << "NETWORK: Not connected to laptop!" << endl;
+        #if NETWORK_VERBOSITY > 0
+            thelog << "NETWORK: Not connected to laptop!" << endl;
+        #endif
         networkControl1 = -1000;
         networkControl2 = -1000;
         networkControl3 = -1000;
