@@ -4,6 +4,8 @@
  * Version : $Id: actuators.cpp,v 1.4 2009/05/24 06:26:27 jason Exp $
  */
 
+#define ACTUATORS_VERBOSITY                 0
+
 #include "jwalk.h"
 #include "alproxies.h"
 #include "actuators.h"
@@ -296,19 +298,27 @@ void Actuators::adjustHardness(float hardness, float* adjustedhardness)
  */
 void Actuators::adjustHardnesses(float hardnesses[], float adjustedhardnesses[], unsigned char numactuators)
 {
+#if ACTUATORS_VERBOSITY > 4
+    thelog << "ACTUATORS: adjustHardnesses" << endl;
+#endif
     // First correct all hardnesses for battery voltage:
     short batteryvoltage = 3*(batteryValues[E_VOLTAGE_MIN] + batteryValues[E_VOLTAGE_MAX]);         // the battery voltage in mV
-    for (unsigned char i=0; i<numactuators; i++)
-        adjustedhardnesses[i] = hardnesses[i]*(Actuators::MaxBatteryVoltage/batteryvoltage);
     
-    // Now to do left and right compensation I need to know which indices are left and right
-    if (numactuators == ALIAS_TARGETS_NOT_HEAD_LENGTH)
+    // Then correct all hardnesses for motor temperature
+    int offset = 0;
+    if (numactuators == ALIAS_HARDNESS_NOT_HEAD_LENGTH)
+        offset = 2;
+    for (unsigned char i=0; i<numactuators; i++)
     {
+        adjustedhardnesses[i] = hardnesses[i]*(Actuators::MaxBatteryVoltage/batteryvoltage);
+        #if ACTUATORS_VERBOSITY > 4
+            thelog << "ACTUATORS: before: " << hardnesses[i] << " after voltage: " << adjustedhardnesses[i];
+        #endif
+        adjustedhardnesses[i] = adjustedhardnesses[i] + adjustedhardnesses[i]*(jointTemperatures[i+offset] - 27)*0.00393;
+        #if ACTUATORS_VERBOSITY > 4
+            thelog << " after temperature(" << jointTemperatures[i] << "): " << adjustedhardnesses[i] << endl;
+        #endif
     }
-    else if (numactuators == ALIAS_TARGETS_ALL_LENGTH)
-    {
-    }
-    return;
 }
 
 /*! Set the stiffness (hardness) for a single joint
