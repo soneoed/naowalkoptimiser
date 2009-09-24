@@ -7,6 +7,8 @@
 #include "jwalkincludes.h"
 #include "jwalk.h"
 
+#define JWALK_VERBOSITY         1
+
 #if JWALK_STANDALONE
 #else
     #include "../../Nao.h"    // We working with robocup code I share proxies to aldcm, almemory, and almotion 
@@ -285,7 +287,7 @@ void JWalk::initWalk()
     usleep(1000*(JWalkActuators->setStiffnessAll(stiffnesses, 1000) - dcmTime));
     
     // don't forget the head
-    float headstiffnesses[2] = {0.25, 0.25};  
+    float headstiffnesses[2] = {0.0, 0.0};  
     setHeadStiffness(headstiffnesses);
     
     balanceFallingEnabled = true;
@@ -435,7 +437,7 @@ void JWalk::waitUntilFinished()
  */
 void JWalk::stop()
 {
-    #if JWALK_VERBOSITY > 1
+    #if JWALK_VERBOSITY > 2
         thelog << "JWALK: stop()" << endl;
     #endif
     
@@ -511,9 +513,9 @@ void JWalk::braceForImpact()
 
         stiffnesses[J_L_SHOULDER_PITCH] = 0.5;
         stiffnesses[J_R_SHOULDER_PITCH] = 0.5;
-        stiffnesses[J_L_HIP_PITCH] = 1.0;
-        stiffnesses[J_R_HIP_PITCH] = 1.0;
-        stiffnesses[J_L_HIP_YAWPITCH] = 1.0;
+        stiffnesses[J_L_HIP_PITCH] = 0.6;
+        stiffnesses[J_R_HIP_PITCH] = 0.6;
+        stiffnesses[J_L_HIP_YAWPITCH] = 0.6;
     }
     else if (balanceFallingForward == true)
     {
@@ -707,7 +709,7 @@ void JWalk::getUp()
         if (dcmTime > getupfinishtime)
         {
             thelog << "JWALK: getUp(): Finished at: " << dcmTimeSinceStart << endl;
-            float headstiffnesses[2] = {0.25, 0.25};
+            float headstiffnesses[2] = {0.0, 0.0};
             setHeadStiffness(headstiffnesses);
             setHeadYaw(0, 100);
             setHeadPitch(0, 100);
@@ -774,7 +776,7 @@ int JWalk::doScript(script scripttorun, bool scripturgent)
         if (dcmTime > scriptfinishtime)
         {
             thelog << "JWALK: doScript(): Finished at: " << dcmTimeSinceStart << endl;
-            float headstiffnesses[2] = {0.5, 0.5};
+            float headstiffnesses[2] = {0.0, 0.0};
             setHeadStiffness(headstiffnesses);
             JWalkActuators->setStiffnessNotHead(JWalkCommonHardnesses);
             balanceFallingEnabled = true;
@@ -811,7 +813,10 @@ void JWalk::checkAndRepair()
     else if (checkHealth() == 2)
     {
         float stiffnesses[ALIAS_TARGETS_ALL_LENGTH];
-        system("aplay /home/root/SoundStates/broken.wav");
+        system("aplay /home/root/SoundStates/warning.wav");
+        usleep(3*1e6);
+        return;
+        
         for (unsigned char i=0; i<ALIAS_TARGETS_ALL_LENGTH; i++)
             stiffnesses[i] = 0.0;
         usleep(100*(JWalkActuators->setStiffnessAll(stiffnesses, 100) - dcmTime));
@@ -820,10 +825,10 @@ void JWalk::checkAndRepair()
         system("ssh root@localhost /etc/init.d/naoqi restart");
         std::exit(1);
     }
-    else if (checkHealth() == 1)
+    /*else if (checkHealth() == 1)
         system("aplay /home/root/SoundStates/warning.wav");
     else
-        system("aplay /home/root/SoundStates/ok.wav");
+        system("aplay /home/root/SoundStates/ok.wav");*/
 }
 
 int JWalk::checkHealth()
@@ -842,7 +847,7 @@ int JWalk::checkHealth()
         thelog << boardErrors[i] << ", ";
         if (boardErrors[i] != 0)
         {
-            if ((boardErrors[i] >= 97 && boardErrors[i] <= 111) || (boardErrors[i] >= 113 && boardErrors[i] <= 127) || (boardErrors[i] >= 209 && boardErrors[i] <= 211))
+            if ((boardErrors[i] >= 49 && boardErrors[i] <= 51) || (boardErrors[i] >= 97 && boardErrors[i] <= 111) || (boardErrors[i] >= 113 && boardErrors[i] <= 127) || (boardErrors[i] >= 161 && boardErrors[i] <= 175) || (boardErrors[i] >= 209 && boardErrors[i] <= 211))
                 warning = true;
             else
                 return 2;
