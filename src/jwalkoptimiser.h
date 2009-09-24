@@ -11,7 +11,7 @@
 #define JWALKOPTIMISER_VERBOSITY            3
 #define JWALKOPTIMISER_FREQUENCY            10
 
-extern float networkControl1, networkControl2, networkControl3;
+extern float networkVelocityX, networkVelocityY, networkVelocity, networkControl1, networkControl2, networkControl3;
 
 extern pthread_t jWalkOptimiserThread;
 
