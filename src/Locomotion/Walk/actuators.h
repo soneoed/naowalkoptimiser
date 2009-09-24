@@ -10,7 +10,6 @@
 #include "jwalkincludes.h"
 #include "sensors.h"
 
-#define ACTUATORS_VERBOSITY                 0
 #define ACTUATORS_CLEARAFTER                0           // use this to switch between the aldcm's ClearAfter and ClearAll modes
 
 // These offsets only work for 'not head' data, add 2 to work with 'all' data
