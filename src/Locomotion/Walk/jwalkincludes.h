@@ -38,7 +38,6 @@ namespace AL
 }
 
 #define DEBUG_TO_FILE           1                   // controls the location of the debug information (a file, or cout)
-#define JWALK_VERBOSITY         3                   // controls the level of debug information displayed
 #if DEBUG_TO_FILE
     #define thelog              jasonLog
     extern std::ofstream thelog;
