@@ -422,6 +422,11 @@ void Step::getNextFrame(float** positions, float** hardnesses)
         
         if (fabs(error) > 0.1)
         {
+            StepPositions[StepCurrentIndex][J_L_HIP_PITCH - 2] -= (gain/1.88)*error;
+            StepPositions[StepCurrentIndex][J_L_ANKLE_PITCH - 2] -= gain*error;
+            StepPositions[StepCurrentIndex][J_R_HIP_PITCH - 2] -= (gain/1.88)*error;
+            StepPositions[StepCurrentIndex][J_R_ANKLE_PITCH - 2] -= gain*error;
+            
             if (leftSupportMode == SM_STANCE || leftSupportMode == SM_PUSH)
             {
                 StepPositions[StepCurrentIndex][J_L_HIP_PITCH - 2] -= (gain/1.88)*error;
