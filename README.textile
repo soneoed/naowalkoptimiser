@@ -1,3 +1,12 @@
 h1. README
 
-This is a test
+The purpose of this software is to autonomously adjust walk parameters for Aldebaran's NAO robot. 
+
+At present, a laser scanner is used to track, and remotely control the NAO. The measured speed is sent to the NAO, where an EHCLS algorithm is used to minimise the cost of transport.
+
+The walk parameters adjusted are joint stiffness values. A gait cycle is split into 4 phases; stance, push, swing and impact. The joint stiffness of each leg joint is specified for each gait phase. Thus, there are 24 parameters under optimisation.
+
+_NOTE._ This walk engine is now obsolete and I will not be developing it further.
+
+h2. CONTENTS
+
