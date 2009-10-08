@@ -27,3 +27,8 @@ The source code.
 
 *walkoptimiser.xcodeproj*
 XCode project files.
+
+h2. INSTALLING
+The software is designed to be used with Aldebaran's RoboCup ToolKit. It will compiles using Aldebaran's crosscompile tools. Thus, to compile and run the code just following their instructions. 
+
+There are 100s of data files required by JWalk1.1. The steps (jasondata.gz) need to be put in /root/jasondata on the NAO, and the scripts (scripts.gz) need to be put in /root.
