@@ -1,7 +1,8 @@
 # .gitignore for naowalkoptimiser
 
-# Xcode makes a silly build directory that I don't want
+# We don't want to include Xcode project files
 /build
+*.xcodeproj
 
 # Python Ignores:
 #we don't want to include .pyc files
