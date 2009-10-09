@@ -1,0 +1,4 @@
+# .gitignore for naowalkoptimiser
+
+# we don't want to include .pyc files
+*.pyc
