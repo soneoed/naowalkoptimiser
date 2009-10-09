@@ -34,6 +34,9 @@ The source code for the NAO code. This includes code for JWalk1.2, and an implem
 * Locomotion contains all of the motion code, scripts and walking. Additionally, the code to communicate with the dcm and almemory is here. Consequently, all of the 'sensors' are here to. The top-level file is Walk/jwalk.h.
 * Network contains a small amount of network code. Its function is to receive network walk commands from the controller, and to receive the measured speed. 
 
+*walkgenerator.zip*
+This archive contains everything you need if you desire to regenerate the step files included in jasondata.tgz. Documentation for this is inside the archive
+
 */walkoptimiser.xcodeproj*
 XCode project files.
 
