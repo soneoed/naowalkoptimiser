@@ -42,16 +42,17 @@ XCode project files.
 
 h2. INSTALLING
 
-The software is designed to be used with Aldebaran's RoboCup ToolKit. It will compile using Aldebaran's cross--compile tools. Thus, to compile and run the code just follow their instructions for creating a dynamic library, while targeting the NAO. Add libwalkoptimiser.so to @/opt/naoqi/modules/lib/@.
-
-There are 100s of data files required by JWalk1.2. The steps (jasondata.tgz) need to be put in @/home/root/jasondata/@ on the NAO, and the scripts (scripts.zip) need to be put in @/home/root@.
-
-h2. RUNNING
-
-To run the software modify @/opt/naoqi/modules/lib/autoload.ini@ to be
+The software is designed to be used with Aldebaran's RoboCup ToolKit. It will compile using Aldebaran's cross--compile tools. Thus, to compile and run the code just follow their instructions for creating a dynamic library, while targeting the NAO. Modimodify @/opt/naoqi/modules/lib/autoload.ini@ to be
 
 bc. [core]
 albase
 [extra]
 devicecommunicationmanager
 walkoptimiser
+
+
+There are 100s of data files required by JWalk1.2. The steps (jasondata.tgz) need to be put in @/home/root/jasondata/@ on the NAO, and the scripts (scripts.zip) need to be put in @/home/root@.
+
+h2. RUNNING
+
+The libwalkoptimiser will automatically be loaded when naoqi starts, so @nao restart@.
