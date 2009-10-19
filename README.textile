@@ -56,3 +56,5 @@ There are 100s of data files required by JWalk1.2. The steps (jasondata.tgz) nee
 h2. RUNNING
 
 The libwalkoptimiser will automatically be loaded when naoqi starts, so @nao restart@.
+
+After naoqi starts, robot will await your command.
