@@ -9,9 +9,10 @@
 
 #include "optimiser.h"
 #include "boost/random.hpp"
+#include <math.h>
 
 #define OPTIMISER_VERBOSITY         4
-#define OPTIMISER_ASSESS            1
+#define OPTIMISER_ASSESS            0
 
 #define NAO_WEIGHT                  4.8*9.81
 
@@ -39,6 +40,11 @@ Optimiser::Optimiser()
     AssessSpeedSum = 0;             // the sum
     AssessPowerSum = 0;
     AssessSpeedCountLimit = 1000;   // the number of speeds required before an assessment is reported.
+    
+    Iteration = 0;
+    CurrentSpeed = 0;
+    CurrentCost = 0;
+    initOptimiserLog();
 }
 
 Optimiser::~Optimiser()
@@ -95,6 +101,10 @@ void Optimiser::tickOptimiser(float speed, float power)
     static float cost = 0;                      // the specific cost of transport
     
     cost = power/(NAO_WEIGHT*speed);
+
+    CurrentSpeed = speed;
+    CurrentCost = cost;
+    
     if (initialised == false)
     {
         if (LeftStep == NULL || RightStep == NULL)          // This is highly unlikely, but just in case; we are not initialised unless we have both the left and right step
@@ -150,6 +160,8 @@ void Optimiser::tickOptimiser(float speed, float power)
     }
     
     mutateBestParameters();
+    writeOptimiserLog();
+    Iteration++;
     return;
 }
 
@@ -335,6 +347,11 @@ void Optimiser::assessParameters(Step* currentstep, float currentspeed)
     {
         float speed = AssessSpeedSum/AssessSpeedCount;
         float power = AssessPowerSum/AssessSpeedCount;
+        float cost = power/(NAO_WEIGHT*speed);
+        
+        CurrentSpeed = speed;
+        CurrentCost = cost;
+        
         thelog << "OPTIMISER: Assessment: Avg. Speed: " << speed << "Cost: " << power/(NAO_WEIGHT*speed) << " Falls: " << balanceFallenCount << endl;
         thelog << "OPTIMISER: Parameters: " << endl;
         for (int i=0; i<SM_NUM_MODES; i++)
@@ -345,8 +362,35 @@ void Optimiser::assessParameters(Step* currentstep, float currentspeed)
         AssessSpeedCount = 0;
         AssessSpeedSum = 0;
         AssessPowerSum = 0;
+        writeOptimiserLog();
+        Iteration++;
     }
 }
 
+void Optimiser::initOptimiserLog()
+{
+    optimiserlog.open("/var/log/optimiser.log");
+    optimiserlog << "Time (s), Iteration, Speed, Cost, ParamNorm, BestSpeed, BestCost, BestParamNorm" << endl;
+}
 
+void Optimiser::writeOptimiserLog()
+{
+    optimiserlog << dcmTimeSinceStart << ", " << Iteration << ", " << CurrentSpeed << ", " << CurrentCost << ", ";
+    // calculate the parameter norm
+    float sqrdsum = 0;
+    for (int i=0; i<SM_NUM_MODES; i++)
+        for (int j=0; j<SH_NUM_JOINTS; j++)
+            sqrdsum += pow(LeftStep->StepSupportHardnesses[i][j], 2);
+    float norm = sqrt(sqrdsum);
+    optimiserlog << norm << ", ";
+    optimiserlog << BestSpeed << ", " << BestCost << ", ";
+    // calculate the parameter norm
+    sqrdsum = 0;
+    for (int i=0; i<SM_NUM_MODES; i++)
+        for (int j=0; j<SH_NUM_JOINTS; j++)
+            sqrdsum += pow(BestParameters[i][j], 2);
+    norm = sqrt(sqrdsum);
+    optimiserlog << norm << ", " << endl;
+    
+}
 

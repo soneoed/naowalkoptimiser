@@ -2,8 +2,6 @@
  *  optimiser.h
  *  walkoptimiser
  *
- *  A class that implements an optimisation algorithm
- *
  *  Created by jason on 7/09/09.
  *  Copyright 2009 UoN. All rights reserved.
  *
@@ -28,6 +26,9 @@ class Optimiser
         float normalDistribution(float mean, float sigma);
     
         void assessParameters(Step* currentstep, float currentspeed);
+    
+        void initOptimiserLog();
+        void writeOptimiserLog();
     public:
         float BestSpeed;            // the speed in cm/s of the best set of parameters
         float BestCost;             // the cost of transport in J/(Ncm)
@@ -58,6 +59,11 @@ class Optimiser
         float AssessSpeedSum;       // the sum
         float AssessPowerSum;
         int AssessSpeedCountLimit;  // the number of speeds required before an assessment is reported.
+    
+        ofstream optimiserlog;
+        int Iteration;
+        float CurrentSpeed;
+        float CurrentCost;
 };
 
 
