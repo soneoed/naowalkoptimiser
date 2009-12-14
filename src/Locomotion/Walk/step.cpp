@@ -233,11 +233,10 @@ void Step::loadSupportHardnesses()
 {
     // TODO: Don't hard code the support hardnesses
                                                                 // Yaw,HRoll,HPitch,KPitch,APitch,ARoll
-
-    float tempSupportHardnesses[SM_NUM_MODES][SH_NUM_JOINTS] = {{1.84945,0.149649,0.699574,0.485594,0.264979,0.357034},
-        {0.586952,0.0618059,0.302333,0.217231,0.272252,0.162651},
-        {0.562834,0.191856,0.453009,0.142515,0.374402,0.217592},
-        {1.15279,0.286017,0.502982,0.258765,0.235281,0.449806}};
+    float tempSupportHardnesses[SM_NUM_MODES][SH_NUM_JOINTS] = {{0.70, 0.26, 0.55, 0.25, 0.24, 0.28},          // SM_STANCE
+                                                                {0.70, 0.26, 0.55, 0.25, 0.30, 0.28},          // SM_PUSH
+                                                                {0.70, 0.26, 0.55, 0.25, 0.24, 0.28},          // SM_SWING
+                                                                {0.70, 0.26, 0.55, 0.25, 0.24, 0.28}};         // SM_IMPACT
     
     for (unsigned char i=0; i<SM_NUM_MODES; i++)
     {
