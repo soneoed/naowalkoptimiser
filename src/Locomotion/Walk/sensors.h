@@ -17,9 +17,9 @@
 
 #define SENSOR_VERBOSITY        0
     
-#define SENSOR_LOGGING          0               // enable logging of all data by setting this to 1
+#define SENSOR_LOGGING          1               // enable logging of all data by setting this to 1
 #define SENSOR_ULTRASONIC_ON    1               // enable the ultrasonic sensors by setting this to 1
-#define SENSOR_EXPORT_TO_AL     1               // set this to 1 to export additional soft sensors to almemory
+#define SENSOR_EXPORT_TO_AL     0               // set this to 1 to export additional soft sensors to almemory
 
 
 /**************************************************************************************

@@ -1344,6 +1344,8 @@ void Sensors::writeBalanceData()
   {
     balanceLog << balanceValues[i] << ", ";
   }
+  // write the fall control feedback values
+  balanceLog << balanceFalling << ", " << balanceFallen << ", ";
   balanceLog << endl; 
   return;
 }
@@ -1431,6 +1433,8 @@ void Sensors::writeBalanceLabels()
     balanceLog << "B_ANGLE_Y, ";
     balanceLog << "B_GYRO_X, ";
     balanceLog << "B_GYRO_Y, ";
+    balanceLog << "balanceFalling, ";
+    balanceLog << "balanceFallen, ";
     balanceLog << endl;
     return;
 }
