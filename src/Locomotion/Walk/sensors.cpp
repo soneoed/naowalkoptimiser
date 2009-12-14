@@ -1098,10 +1098,10 @@ void Sensors::determineWhetherFalling()
                 if (balanceValues[B_ANGLE_Y] > 0.50)    // we are falling forwards
                     balanceFallingForward = true;
                 
-                if (balanceValues[B_ANGLE_X] < -0.55)   // we are falling left
+                if (balanceValues[B_ANGLE_X] < -0.65)   // we are falling left
                     balanceFallingLeft = true;
                 
-                if (balanceValues[B_ANGLE_X] > 0.55)   // we are falling right
+                if (balanceValues[B_ANGLE_X] > 0.65)   // we are falling right
                     balanceFallingRight = true;
             }
         }
