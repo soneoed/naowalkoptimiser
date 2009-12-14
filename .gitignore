@@ -3,6 +3,7 @@
 # We don't want to include Xcode project files
 /build
 *.xcodeproj
+/bin
 
 # Python Ignores:
 #we don't want to include .pyc files
