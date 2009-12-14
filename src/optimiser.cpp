@@ -54,9 +54,8 @@ Optimiser::~Optimiser()
 void Optimiser::doOptimisation(Step* currentstep, float currentspeed)
 {
     if (balanceFallenCount > 0)
-    {
-        SpeedSum = 0;
-    }
+        SpeedSum = 0.01;
+        
     if (currentstep == NULL)                            // Don't do optimisation on NULL steps
         return;
     
@@ -126,7 +125,7 @@ void Optimiser::tickOptimiser(float speed, float power)
 #if OPTIMISER_VERBOSITY > 3
     thelog << "OPTIMISER: tickOptimiser on " << LeftStep->Name << " and " << RightStep->Name << " with speed " << speed << ", power " << power << ", and cost " << cost << endl;
 #endif
-    if (cost < BestCost)            // speed > BestSpeed
+    if (cost < BestCost && balanceFallenCount == 0)            // speed > BestSpeed
     {   
         #if OPTIMISER_VERBOSITY > 2
             thelog << "OPTIMISER: tickOptimiser Improvement." << endl;
