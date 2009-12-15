@@ -23,7 +23,7 @@ Optimiser::Optimiser()
     
     SpeedCount = 0;            // the number of speeds received with the current settings
     SpeedSum = 0;              // the cumulative sum of the received speeds 
-    SpeedCountLimit = 240;     // the number of speeds required before progressing the optimisation. The refresh rate is 10Hz, so this will be 25s
+    SpeedCountLimit = 50;     // the number of speeds required before progressing the optimisation. The refresh rate is 10Hz, so this will be 25s
     SpeedImprovement = 0;
     SpeedPreviousImprovement = 2.5;
     
@@ -133,7 +133,7 @@ void Optimiser::tickOptimiser(float speed, float power)
         SpeedImprovement = speed - BestSpeed;
         CostImprovement = cost - BestCost;
         //Alpha = 0.9*fabs(tanh(SpeedImprovement/SpeedPreviousImprovement));
-        Alpha = 0.9*fabs(tanh(CostImprovement/CostPreviousImprovement));
+        Alpha = 0.9*fabs(tanh(fabs(CostImprovement/CostPreviousImprovement)));
         copyToBestParameters();
         BestSpeed = speed;
         BestCost = cost;
@@ -152,7 +152,7 @@ void Optimiser::tickOptimiser(float speed, float power)
         Alpha *= 0.9;
         CountSinceLastImprovement = 0;
         BestSpeed *= 0.97;
-        BestCost *= 1.03;
+        BestCost *= 1.1;
         #if OPTIMISER_VERBOSITY > 2
             thelog << "OPTIMISER: tickOptimiser Reseting" << endl;
         #endif

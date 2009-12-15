@@ -56,12 +56,12 @@ class MainFrame(wx.Frame):
         ## control variables
         self.control = numpy.zeros(3)
         # automatic
-        self.state = 'init'         # states: init, chase, error
+        self.state = 'init'         # states: init, chase, position, lost
         self.statecount = 0
         self.targetnumber = 0
         #self.targets = [[250, -100], [250, 100], [50, 100], [50, -100]]
-        self.targets = [[275, -10], [275, 10], [50, 10], [50, -10]]
-        #self.targets = [[275, 0], [50, 0]]
+        #self.targets = [[275, -10], [275, 10], [50, 10], [50, -10]]
+        self.targets = [[275, 0], [50, 0]]
 
         # manual
         self.up = False             # set these to true when the key is pressed!
@@ -104,24 +104,37 @@ class MainFrame(wx.Frame):
         if self.state == 'init':
             self.statecount += 1
             if self.statecount > 20:
-                print "automaticWalk: init->away"
+                print "automaticWalk: init->chase"
                 self.state = 'chase'
                 self.statecount = 0
+        elif self._robotLost():
+            self.state = 'lost'
         elif self.state == 'chase':
             self.statecount += 1
-            if self.statecount > 10 and self._targetReached():
-                print "automaticWalk: chase, new target",
+            if self.statecount > 30 and self._limitReached():
+                print "automaticWalk: chase->position"
+                self.state = 'position'
                 self.targetnumber = (self.targetnumber + 1)%len(self.targets)
-                print self.targets[self.targetnumber]
                 self.statecount = 0
+        elif self.state == 'position':
+            self.statecount += 1
+            if self.statecount > 5 and self._facingTarget():
+                print "automaticWalk: position->chase"
+                self.state = 'chase'
+                self.statecount = 0
+        elif self.state == 'lost':
+            if self._robotLost() == False:
+                self.state = 'position'
+            
 
-        if self.state == 'init':
+        if self.state == 'init' or self.state == 'chase':
             self.control = [-1, 0, 0]
-        elif self.state == 'chase':
+        elif self.state == 'position':
             x, y = self.calculateRelativeTarget(self.targets[self.targetnumber])
             bearing = numpy.arctan2(y,x)
-            distance = numpy.sqrt(x**2 + y**2)
             self.control = [-1, bearing, 0]
+        elif self.state == 'lost':
+            self.control = [0, 0, 0]
         else:
             print "automaticWalk: ERROR. Unknown state", self.state
             
@@ -129,15 +142,48 @@ class MainFrame(wx.Frame):
         if abs(self.control[1]) > 2.59:
             self.control[1] = (self.control[1]/abs(self.control[1]))*2.59
         
+    def _limitReached(self):
+        """ Returns true if the robot has reached the border of its play area """
+        innerlimit = 50
+        sidelimit = 150
+        outerlimit = 275
+        
+        if self.localisation.X < innerlimit:
+            return True
+        if math.fabs(self.localisation.Y) > sidelimit:
+            return True
+        if numpy.sqrt(self.localisation.X**2 + self.localisation.Y**2) > outerlimit:
+            return True
+            
+        return False
             
     def _targetReached(self):
-        """ """
+        """ Returns true if the current target (self.targets[self.targetnumber]) has been reached"""
         target = self.targets[self.targetnumber]
         
         if numpy.sqrt((target[0] - self.localisation.X)**2 + (target[1] - self.localisation.Y)**2) < 20:
             return True
         else:
             return False
+            
+    def _facingTarget(self):
+        """ Returns true if we are facing the target """
+        target = self.targets[self.targetnumber]
+        x, y = self.calculateRelativeTarget(target)
+        bearing = numpy.arctan2(y,x)
+        if math.fabs(bearing) < 0.25:
+            return True
+        else:
+            return False
+            
+    def _robotLost(self):
+        """ Returns true if the robot has gone beyond the border of its play area """
+        if self.localisation.X < 20:
+            return True
+        if numpy.sqrt(self.localisation.X**2 + self.localisation.Y**2) > 350:
+            return True
+            
+        return False
             
     def calculateRelativeTarget(self, target):
         """ """

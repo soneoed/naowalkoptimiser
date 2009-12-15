@@ -2,7 +2,7 @@ import socket
 
 class Network:
     
-    def __init__(self, ip="Call.local", port=6767):
+    def __init__(self, ip="flexo.local", port=6767):
             
         self.IP = ip
         self.Port = port
