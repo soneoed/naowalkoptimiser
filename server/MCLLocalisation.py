@@ -230,6 +230,7 @@ class Localisation:
         self.States[:,Localisation.X] = self.PreviousStates[:,Localisation.X] + xdot*dt*numpy.cos(self.States[:,Localisation.THETADOT]*dt) - ydot*dt*numpy.sin(self.States[:,Localisation.THETADOT]*dt)
         self.States[:,Localisation.Y] = self.PreviousStates[:,Localisation.Y] + ydot*dt*numpy.cos(self.States[:,Localisation.THETADOT]*dt) + xdot*dt*numpy.sin(self.States[:,Localisation.THETADOT]*dt)
         
+        # make sure that theta is between +/- pi
         self.States[:,Localisation.THETA] = numpy.arctan2(numpy.sin(self.States[:,Localisation.THETA]), numpy.cos(self.States[:,Localisation.THETA]))
         
     def modelControl(self):
